@@ -1,0 +1,76 @@
+[build-system]
+requires = [
+    "setuptools",
+    "wheel",
+    "setuptools_scm[toml]"
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "lima-api"
+dynamic = ["version"]
+description = "Lima-API is sync and async library that allows implements Rest APIs libs with python typing."
+readme = "README.md"
+authors = [
+    { name = "Cesar Gonzalez", email = "cgonzalez@paradigmadigital.com" },
+    { name = "Victor Torre", email = "vatorre@paradigmadigital.com" }
+]
+license = { file = "LICENSE" }
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+requires-python = ">=3.9"
+dependencies = [
+    "httpx",
+    "opentelemetry-instrumentation-httpx",
+]
+
+[tool.setuptools_scm]
+
+[tool.setuptools.packages.find]
+where = ["./src"]
+
+[project.optional-dependencies]
+test = [
+    "coverage",
+    "pytest",
+    "pytest-cov",
+    "pytest-mock",
+    "ruff",
+]
+pydantic2 = [
+    "pydantic[email]>=2.3.0,<3.0",
+    "pydantic-settings>=2.0.3",
+]
+pydantic1 = [
+    "pydantic[email]>=1.10,<2.0",
+]
+all = [
+    "lima_api[test, pydantic2]",
+]
+
+[tool.ruff]
+line-length = 120
+include = ["pyproject.toml", "src/**/*.py"]
+
+[tool.ruff.lint]
+select = [
+    "E", # pycodestyle errors
+    "W", # pycodestyle warnings
+    "F", # pyflakes
+    "I", # isort
+    "B", # flake8-bugbear
+    "C4", # flake8-comprehensions
+    "UP", # pyupgrade
+    "ASYNC", # flake8-async
+    "S", # flake8-bandit
+    "DTZ", # flake8-datetimez
+    "SIM", # flake8-simplify
+]
+ignore = [
+
+]
