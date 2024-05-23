@@ -148,7 +148,12 @@ def get_body(body_mapping: Optional[dict], kwargs: dict):
                 else:
                     body = [item.model_dump(exclude_none=True) for item in body]
             else:
-                body = body_mapping["class"].parse_obj(kwargs[body_mapping["kwargs_name"]]).dict(exclude_none=True)
+                body_class = body_mapping["class"]
+                args = kwargs[body_mapping["kwargs_name"]]
+                if not isinstance(args, list):
+                    body = body_class.parse_obj(args).dict(exclude_none=True)
+                else:
+                    body = [body_class.parse_obj(item).dict(exclude_none=True) for item in args]
         else:
             body = kwargs[body_mapping["kwargs_name"]]
             if not isinstance(body, (list, tuple, dict)):
