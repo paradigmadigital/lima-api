@@ -25,35 +25,60 @@ DEFAULT_UNDEFINED_VALUES: tuple[Any, ...] = (None, "")
 
 
 class LimaApiBase:
+    headers: dict[str, str]
+    response_mapping: dict[int, type[LimaException]]
+    client_kwargs: dict
+    retries: int = DEFAULT_HTTP_RETRIES
+    timeout: int = DEFAULT_HTTP_TIMEOUT
+    default_response_code: int = DEFAULT_RESPONSE_CODE
+    undefined_values: tuple[Any, ...] = DEFAULT_UNDEFINED_VALUES
+    default_exception: type[LimaException] = LimaException
+
+    def __new__(cls, *args, **kwargs):
+        new_class = super().__new__(cls)
+        if not hasattr(new_class, "headers"):
+            new_class.headers = {}
+        if not hasattr(new_class, "response_mapping"):
+            new_class.response_mapping = {}
+        if not hasattr(new_class, "client_kwargs"):
+            new_class.client_kwargs = {}
+        return new_class
+
     def __init__(
         self,
         base_url: str,
-        retries: int = DEFAULT_HTTP_RETRIES,
-        timeout: int = DEFAULT_HTTP_TIMEOUT,
+        *,
+        retries: Optional[int] = None,
+        timeout: Optional[int] = None,
         headers: Optional[dict[str, str]] = None,
-        default_response_code: int = DEFAULT_RESPONSE_CODE,
+        default_response_code: Optional[int] = None,
         response_mapping: Optional[dict[int, type[LimaException]]] = None,
-        undefined_values: tuple[Any, ...] = DEFAULT_UNDEFINED_VALUES,
-        default_exception: type[LimaException] = LimaException,
+        undefined_values: tuple[Any, ...] = None,
+        default_exception: Optional[type[LimaException]] = None,
         client_kwargs: Optional[dict] = None,
     ):
         self.base_url: str = base_url
 
-        self.retries = retries
-        self.timeout = timeout
-        self.default_response_code = default_response_code
-        self.default_exception = default_exception or LimaException
-        if response_mapping is None:
-            response_mapping = {}
-        self.response_mapping: dict[int, type[LimaException]] = response_mapping
-        self.undefined_values = undefined_values
-        self.headers = headers
+        if retries is not None:
+            self.retries = retries
+        if timeout is not None:
+            self.timeout = timeout
+        if default_response_code is not None:
+            self.default_response_code = default_response_code
+        if default_exception is not None:
+            self.default_exception = default_exception
+        if undefined_values is not None:
+            self.undefined_values = undefined_values
+
+        self.response_mapping.update(response_mapping or {})
+        self.headers.update(headers or {})
         self.transport: Optional[Union[SyncOpenTelemetryTransport, AsyncOpenTelemetryTransport]] = None
         self.client: Optional[Union[httpx.Client, httpx.AsyncClient]] = None
-        self.client_kwargs = client_kwargs or {}
+        self.client_kwargs.update(client_kwargs or {})
 
     def _create_request(
         self,
+        *,
         sync: bool,
         method: str,
         path: str,
@@ -66,12 +91,12 @@ class LimaApiBase:
         timeout: Optional[int] = None,
     ) -> httpx.Request:
         if self.client is None:
-            raise LimaException("Cliente no inicializado")
+            raise LimaException("uninitialized client")
 
         if sync and inspect.iscoroutinefunction(self.client.send):
-            raise LimaException("Función síncrona en cliente asíncrono")
+            raise LimaException("sync function in async client")
         elif not sync and not inspect.iscoroutinefunction(self.client.send):
-            raise LimaException("Función asíncrona en cliente síncrono")
+            raise LimaException("async function in sync client")
 
         params = get_request_params(
             query_params_mapping,
@@ -112,6 +137,7 @@ class LimaApiBase:
 
     def _create_response(
         self,
+        *,
         api_response: httpx.Response,
         return_class: Any,
         response_mapping: Optional[dict[int, type[LimaException]]] = None,
@@ -144,30 +170,9 @@ class LimaApiBase:
 
 
 class LimaApi(LimaApiBase):
-    def __init__(
-        self,
-        base_url: str,
-        retries: int = DEFAULT_HTTP_RETRIES,
-        timeout: int = DEFAULT_HTTP_TIMEOUT,
-        headers: Optional[dict[str, str]] = None,
-        default_response_code: int = DEFAULT_RESPONSE_CODE,
-        response_mapping: Optional[dict[int, type[LimaException]]] = None,
-        undefined_values: tuple[Any, ...] = DEFAULT_UNDEFINED_VALUES,
-        default_exception: type[LimaException] = LimaException,
-        client_kwargs: Optional[dict] = None,
-    ):
-        super().__init__(
-            base_url=base_url,
-            retries=retries,
-            timeout=timeout,
-            headers=headers,
-            default_response_code=default_response_code,
-            response_mapping=response_mapping,
-            undefined_values=undefined_values,
-            default_exception=default_exception,
-            client_kwargs=client_kwargs,
-        )
-        transport = httpx.AsyncHTTPTransport(retries=retries)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        transport = httpx.AsyncHTTPTransport(retries=self.retries)
         self.transport: AsyncOpenTelemetryTransport = AsyncOpenTelemetryTransport(transport)
         self.client: Optional[httpx.AsyncClient] = None
 
@@ -190,30 +195,9 @@ class LimaApi(LimaApiBase):
 
 
 class SyncLimaApi(LimaApiBase):
-    def __init__(
-        self,
-        base_url: str,
-        retries: int = DEFAULT_HTTP_RETRIES,
-        timeout: int = DEFAULT_HTTP_TIMEOUT,
-        headers: Optional[dict[str, str]] = None,
-        default_response_code: int = DEFAULT_RESPONSE_CODE,
-        response_mapping: Optional[dict[int, type[LimaException]]] = None,
-        undefined_values: tuple[Any, ...] = DEFAULT_UNDEFINED_VALUES,
-        default_exception: type[LimaException] = LimaException,
-        client_kwargs: Optional[dict] = None,
-    ):
-        super().__init__(
-            base_url=base_url,
-            retries=retries,
-            timeout=timeout,
-            headers=headers,
-            default_response_code=default_response_code,
-            response_mapping=response_mapping,
-            undefined_values=undefined_values,
-            default_exception=default_exception,
-            client_kwargs=client_kwargs,
-        )
-        transport = httpx.HTTPTransport(retries=retries)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        transport = httpx.HTTPTransport(retries=self.retries)
         self.transport: SyncOpenTelemetryTransport = SyncOpenTelemetryTransport(transport)
         self.client: Optional[httpx.Client] = None
 

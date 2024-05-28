@@ -47,7 +47,7 @@ def get_request_params(query_params_mapping: list[dict], kwargs: dict, undefined
     params = {}
     for param_map in query_params_mapping:
         if param_map["kwargs_name"] not in kwargs and "default" not in param_map:
-            raise TypeError(f"Falta el argumento obligatorio <{param_map['kwargs_name']}>")
+            raise TypeError(f"required argument missing <{param_map['kwargs_name']}>")
         argument_value = (
             kwargs[param_map["kwargs_name"]] if param_map["kwargs_name"] in kwargs else param_map["default"]
         )
@@ -83,6 +83,7 @@ def get_mappings(path: str, parameters: MappingProxyType[str, inspect.Parameter]
     body_mapping: Optional[dict] = None
 
     for param_name, parameter in ((k, v) for k, v in parameters.items() if k not in ["self", "args", "kwargs"]):
+        attrs = get_args(parameter.annotation)
         param_map = {
             "api_name": (
                 parameter.default.alias
@@ -90,10 +91,8 @@ def get_mappings(path: str, parameters: MappingProxyType[str, inspect.Parameter]
                 else param_name
             ),
             "kwargs_name": param_name,
-            "class": (
-                parameter.annotation if inspect.isclass(parameter.annotation) else get_args(parameter.annotation)[0]
-            ),
-            "wrap": (None if inspect.isclass(parameter.annotation) else parameter.annotation),
+            "class": (attrs[0] if attrs else parameter.annotation),
+            "wrap": (parameter.annotation if attrs else None),
         }
 
         # Default values
@@ -125,14 +124,14 @@ def get_mappings(path: str, parameters: MappingProxyType[str, inspect.Parameter]
             path_params_mapping.append(param_map)
         elif location == Location.BODY:
             if body_mapping:
-                raise ValueError("Too many body params")
+                raise ValueError("too many body params")
             body_mapping = param_map
         else:
-            raise ValueError("Invalid location")
+            raise ValueError("invalid location")
 
     missing_path_params = set(path_params) - {p["api_name"] for p in path_params_mapping}
     if missing_path_params:
-        raise LimaException(f"Falta definir el/los parametros de path: <{','.join(missing_path_params)}>")
+        raise LimaException(f"path parameters need to be defined: <{','.join(missing_path_params)}>")
 
     return query_params_mapping, path_params_mapping, body_mapping
 

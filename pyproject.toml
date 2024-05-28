@@ -55,7 +55,7 @@ all = [
 
 [tool.ruff]
 line-length = 120
-include = ["pyproject.toml", "src/**/*.py"]
+include = ["pyproject.toml", "src/**/*.py", "tests/**/*.py"]
 
 [tool.ruff.lint]
 select = [
@@ -72,5 +72,8 @@ select = [
     "SIM", # flake8-simplify
 ]
 ignore = [
-
+    "B008",  # do not perform function calls in argument defaults
 ]
+
+[tool.ruff.lint.extend-per-file-ignores]
+"tests/**/*.py" = ["S101", "S106", "UP035", "UP006"]
