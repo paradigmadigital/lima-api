@@ -1,95 +1,43 @@
-from typing import List, Optional
+from typing import Optional
 
 import httpx
-import pytest
-from pydantic import BaseModel
-from pydantic.fields import FieldInfo
-
 import lima_api
-from lima_api.parameters import (
-    BodyParameter,
-    PathParameter,
-    QueryParameter,
+import pytest
+from client import (
+    AsyncClient,
+    GenericError,
+    Item,
+    ItemNotFound,
+    LoginDataValidate,
+    SyncClient,
+    SyncDeclarativeConfClient,
+    UnexpectedError,
 )
+from lima_api.parameters import BodyParameter
 
 
-class Item(BaseModel):
-    id: int
-    name: str
+class TestAsyncLimaApi:
+    def test_sync_client(self, mocker):
+        client_mock = mocker.patch("httpx.Client")
+        client = AsyncClient(base_url="http://localhost/")
+        client.client = httpx.AsyncClient(transport=client.transport, timeout=client.timeout)
 
+        with pytest.raises(lima_api.LimaException) as exc_info:
+            client.sync_list()
 
-class LoginDataValidate(BaseModel):
-    username: str
-    password: str
-    client_id: str
-    grant_type: str
+        assert not client_mock.return_value.send.called
+        assert str(exc_info.value.detail) == "sync function in async client"
 
+    def test_warning_async_on_sync_client(self, mocker):
+        client_mock = mocker.patch("httpx.Client")
+        client = AsyncClient(base_url="http://localhost/")
+        client.client = httpx.AsyncClient(transport=client.transport, timeout=client.timeout)
 
-class ItemNotFound(lima_api.LimaException): ...
+        with pytest.raises(lima_api.LimaException) as exc_info:
+            client.sync_list()
 
-
-class GenericError(lima_api.LimaException): ...
-
-
-class AsyncClient(lima_api.LimaApi):
-    @lima_api.get("/items", default_exception=GenericError)
-    def sync_list(self, limit: int = FieldInfo(le=100)) -> list[Item]: ...
-
-
-class SyncClient(lima_api.SyncLimaApi):
-    @lima_api.get("/items", default_exception=GenericError)
-    def sync_list_field_required(
-        self, limit: int = FieldInfo(le=100)
-    ) -> list[Item]: ...
-
-    @lima_api.get(
-        "/items",
-        response_mapping={
-            404: ItemNotFound,
-        },
-        default_exception=GenericError,
-    )
-    def sync_list(self, limit: int = FieldInfo(le=100, default=10)) -> list[Item]: ...
-
-    @lima_api.post(
-        "/realms/token/{path_arg}/",
-        default_response_code=200,
-        response_mapping={400: GenericError},
-    )
-    def do_login(self, path_arg: str, login: LoginDataValidate) -> None: ...
-
-    @lima_api.post(
-        "/realms/token/form",
-        headers={"content-type": "application/x-www-form-urlencoded"},
-        default_response_code=200,
-        response_mapping={400: GenericError},
-    )
-    def do_login_form(self, login: LoginDataValidate) -> None: ...
-
-    @lima_api.get("/items/query", default_exception=GenericError)
-    def sync_list_query(self, limit: int = QueryParameter(le=100)) -> list[Item]: ...
-
-    @lima_api.get("/items/body", default_exception=GenericError)
-    def sync_list_body(self, limit: int = BodyParameter(le=100)) -> list[Item]: ...
-
-    @lima_api.get("/items/{path}", default_exception=GenericError)
-    def sync_list_path(
-        self, limit: int = PathParameter(le=100, alias="path")
-    ) -> list[Item]: ...
-
-    @lima_api.get("/items/query_model", default_exception=GenericError)
-    def sync_list_model(self, params: Item) -> list[Item]: ...
-
-    @lima_api.get("/items/{name}/all", default_exception=GenericError)
-    def sync_all_params(
-        self,
-        path: int = PathParameter(le=100, alias="name"),
-        body: Item = BodyParameter(),
-        query: int = QueryParameter(alias="name"),
-    ) -> list[Item]: ...
-
-    @lima_api.post("/items/split", default_exception=GenericError)
-    def sync_list_objects(self, items: List[Item]) -> list[Item]: ...
+        assert not client_mock.return_value.send.called
+        assert str(exc_info.value.detail) == "sync function in async client"
 
 
 class TestLimaApi:
@@ -98,39 +46,37 @@ class TestLimaApi:
     """
 
     def setup_method(self):
-        self.client = lima_api.LimaApi(base_url="http://localhost:8080")
+        self.client_cls = SyncClient
 
     def test_init(self):
-        assert self.client.base_url == "http://localhost:8080"
+        client = lima_api.LimaApi(base_url="http://localhost:8080")
+        assert client.base_url == "http://localhost:8080"
 
     def test_client_not_init_with_sync_call(self, mocker):
         client_mock = mocker.patch("httpx.Client")
-        client = SyncClient(base_url="http://localhost/")
+        client = self.client_cls(base_url="http://localhost/")
 
         with pytest.raises(lima_api.LimaException) as exc_info:
             client.sync_list()
 
-        assert str(exc_info.value) == "Cliente no inicializado"
+        assert str(exc_info.value) == "uninitialized client"
         assert not client_mock.return_value.send.called
 
     def test_client_field_required(self, mocker):
         client_mock = mocker.patch("httpx.Client")
 
-        with SyncClient(base_url="http://localhost/") as client:
-            with pytest.raises(TypeError) as exc_info:
-                client.sync_list_field_required()
+        with self.client_cls(base_url="http://localhost/") as client, pytest.raises(TypeError) as exc_info:
+            client.sync_list_field_required()
 
-        assert str(exc_info.value) == "Falta el argumento obligatorio <limit>"
+        assert str(exc_info.value) == "required argument missing <limit>"
         assert not client_mock.return_value.send.called
 
     def test_client_init_with_sync_call(self, mocker):
         client_mock = mocker.patch("httpx.Client")
         client_mock.return_value.send.return_value.status_code = 200
-        client_mock.return_value.send.return_value.content = (
-            '[{"id":1, "name": "test"}]'
-        )
+        client_mock.return_value.send.return_value.content = '[{"id":1, "name": "test"}]'
 
-        client = SyncClient(base_url="http://localhost/")
+        client = self.client_cls(base_url="http://localhost/")
         client.start_client()
         response = client.sync_list()
 
@@ -143,9 +89,8 @@ class TestLimaApi:
         client_mock.return_value.send.return_value.status_code = 404
         client_mock.return_value.send.return_value.content = "File not found"
 
-        with SyncClient(base_url="http://localhost/") as client:
-            with pytest.raises(ItemNotFound) as exc_info:
-                client.sync_list()
+        with self.client_cls(base_url="http://localhost/") as client, pytest.raises(ItemNotFound) as exc_info:
+            client.sync_list()
 
         assert client_mock.return_value.send.called
         assert str(exc_info.value.content) == "File not found"
@@ -157,47 +102,20 @@ class TestLimaApi:
         client_mock.return_value.send.return_value.status_code = 503
         client_mock.return_value.send.return_value.content = "Service Unavailable"
 
-        with SyncClient(base_url="http://localhost/") as client:
-            with pytest.raises(GenericError) as exc_info:
-                client.sync_list()
+        with self.client_cls(base_url="http://localhost/") as client, pytest.raises(UnexpectedError) as exc_info:
+            client.sync_list()
 
         assert client_mock.return_value.send.called
         assert str(exc_info.value.content) == "Service Unavailable"
         assert str(exc_info.value.status_code) == "503"
         assert str(exc_info.value.detail) == "Http Code not in response_mapping"
 
-    def test_warning_async_on_sync_client(self, mocker):
-        client_mock = mocker.patch("httpx.Client")
-        client = AsyncClient(base_url="http://localhost/")
-        client.client = httpx.AsyncClient(
-            transport=client.transport, timeout=client.timeout
-        )
-
-        with pytest.raises(lima_api.LimaException) as exc_info:
-            client.sync_list()
-
-        assert not client_mock.return_value.send.called
-        assert str(exc_info.value.detail) == "Función síncrona en cliente asíncrono"
-
-    def test_sync_client(self, mocker):
-        client_mock = mocker.patch("httpx.Client")
-        client = AsyncClient(base_url="http://localhost/")
-        client.client = httpx.AsyncClient(
-            transport=client.transport, timeout=client.timeout
-        )
-
-        with pytest.raises(lima_api.LimaException) as exc_info:
-            client.sync_list()
-
-        assert not client_mock.return_value.send.called
-        assert str(exc_info.value.detail) == "Función síncrona en cliente asíncrono"
-
     def test_client_no_headers(self, mocker):
         client_mock = mocker.patch("httpx.Client")
         client_mock.return_value.send.return_value.status_code = 200
         client_mock.return_value.send.return_value.content = ""
 
-        with SyncClient(base_url="http://localhost") as client:
+        with self.client_cls(base_url="http://localhost") as client:
             client.do_login(
                 path_arg="test",
                 login=LoginDataValidate(
@@ -230,7 +148,7 @@ class TestLimaApi:
         client_mock.return_value.send.return_value.status_code = 200
         client_mock.return_value.send.return_value.content = ""
 
-        with SyncClient(base_url="http://localhost") as client:
+        with self.client_cls(base_url="http://localhost") as client:
             client.do_login_form(
                 login=LoginDataValidate(
                     username="username",
@@ -245,9 +163,7 @@ class TestLimaApi:
         assert method, url == ("POST", "http://localhost/realms/token/form")
         request_kwargs = client_mock.return_value.build_request.call_args.kwargs
         assert "headers" in request_kwargs
-        assert request_kwargs.get("headers") == {
-            "content-type": "application/x-www-form-urlencoded"
-        }
+        assert request_kwargs.get("headers") == {"content-type": "application/x-www-form-urlencoded"}
         assert "json" not in request_kwargs
         assert "data" in request_kwargs
         assert request_kwargs["data"] == {
@@ -258,16 +174,26 @@ class TestLimaApi:
         }
 
 
+class TestDeclarativeConfLimaApi(TestLimaApi):
+    """
+    TestClient
+    """
+
+    def setup_method(self):
+        self.client_cls = SyncDeclarativeConfClient
+
+
 class TestLimaParameters:
     """
     TestClient
     """
 
     def setup_method(self):
-        self.client = lima_api.LimaApi(base_url="http://localhost:8080")
+        self.client_cls = SyncClient
 
     def test_init(self):
-        assert self.client.base_url == "http://localhost:8080"
+        client = lima_api.LimaApi(base_url="http://localhost:8080")
+        assert client.base_url == "http://localhost:8080"
 
     def _mock_request(self, mocker, status_code: int = 200, content: str = "[]"):
         client_mock = mocker.patch("httpx.Client")
@@ -278,7 +204,7 @@ class TestLimaParameters:
     def test_get_params(self, mocker):
         client_mock = self._mock_request(mocker)
 
-        with SyncClient(base_url="http://localhost") as client:
+        with self.client_cls(base_url="http://localhost") as client:
             client.sync_list_query(limit=2)
 
         assert client_mock.return_value.build_request.called
@@ -291,7 +217,7 @@ class TestLimaParameters:
     def test_get_body(self, mocker):
         client_mock = self._mock_request(mocker)
 
-        with SyncClient(base_url="http://localhost") as client:
+        with self.client_cls(base_url="http://localhost") as client:
             client.sync_list_body(limit=2)
 
         assert client_mock.return_value.build_request.called
@@ -304,7 +230,7 @@ class TestLimaParameters:
     def test_get_path(self, mocker):
         client_mock = self._mock_request(mocker)
 
-        with SyncClient(base_url="http://localhost") as client:
+        with self.client_cls(base_url="http://localhost") as client:
             client.sync_list_path(limit=2)
 
         assert client_mock.return_value.build_request.called
@@ -319,7 +245,7 @@ class TestLimaParameters:
     def test_get_models_params(self, mocker):
         client_mock = self._mock_request(mocker)
 
-        with SyncClient(base_url="http://localhost") as client:
+        with self.client_cls(base_url="http://localhost") as client:
             client.sync_list_model(params=Item(id=2, name="test"))
 
         assert client_mock.return_value.build_request.called
@@ -332,7 +258,7 @@ class TestLimaParameters:
     def test_all_params(self, mocker):
         client_mock = self._mock_request(mocker)
 
-        with SyncClient(base_url="http://localhost") as client:
+        with self.client_cls(base_url="http://localhost") as client:
             client.sync_all_params(path=1, query=2, body=Item(id=3, name="name"))
 
         assert client_mock.return_value.build_request.called
@@ -346,6 +272,7 @@ class TestLimaParameters:
 
     def test_many_body(self):
         with pytest.raises(ValueError) as exc_info:
+
             class SyncClient(lima_api.SyncLimaApi):
                 @lima_api.get("/items/split", default_exception=GenericError)
                 def sync_body_split(
@@ -354,11 +281,12 @@ class TestLimaParameters:
                     body_2: str = BodyParameter(),
                 ) -> list[Item]: ...
 
-        assert exc_info.value.args == ('Too many body params',)
+        assert exc_info.value.args == ("too many body params",)
 
     def test_many_body_optionals(self, mocker):
         with pytest.raises(ValueError) as exc_info:
-            class SyncClient(lima_api.SyncLimaApi):
+
+            class TestSyncClient(lima_api.SyncLimaApi):
                 @lima_api.get("/items/split", default_exception=GenericError)
                 def sync_kwargs_overwrite_item(
                     self,
@@ -367,12 +295,25 @@ class TestLimaParameters:
                     name: Optional[str] = BodyParameter(default=None),
                 ) -> list[Item]: ...
 
-        assert exc_info.value.args == ('Too many body params',)
+        assert exc_info.value.args == ("too many body params",)
 
     def test_list_objects(self, mocker):
         client_mock = self._mock_request(mocker)
 
-        with SyncClient(base_url="http://localhost") as client:
+        with self.client_cls(base_url="http://localhost") as client:
+            client.sync_list_objects(items=[Item(id=1, name="one"), Item(id=2, name="test")])
+
+        assert client_mock.return_value.build_request.called
+        method, url = client_mock.return_value.build_request.call_args.args
+        assert method, url == ("GET", "http://localhost/items/query_model")
+        request_kwargs = client_mock.return_value.build_request.call_args.kwargs
+        assert "json" in request_kwargs
+        assert request_kwargs["json"] == [{"id": 1, "name": "one"}, {"id": 2, "name": "test"}]
+
+    def test_typing_objects(self, mocker):
+        client_mock = self._mock_request(mocker)
+
+        with self.client_cls(base_url="http://localhost") as client:
             client.sync_list_objects(items=[Item(id=1, name="one"), Item(id=2, name="test")])
 
         assert client_mock.return_value.build_request.called
