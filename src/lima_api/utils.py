@@ -83,6 +83,8 @@ def get_mappings(path: str, parameters: MappingProxyType[str, inspect.Parameter]
     body_mapping: Optional[dict] = None
 
     for param_name, parameter in ((k, v) for k, v in parameters.items() if k not in ["self", "args", "kwargs"]):
+        if parameter.kind != inspect.Parameter.KEYWORD_ONLY:
+            raise ValueError("positional parameters are not supported, use funct(self, *, ...)")
         attrs = get_args(parameter.annotation)
         param_map = {
             "api_name": (
