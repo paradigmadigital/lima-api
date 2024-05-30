@@ -277,25 +277,38 @@ class TestLimaParameters:
                 @lima_api.get("/items/split", default_exception=GenericError)
                 def sync_body_split(
                     self,
+                    *,
                     body_1: str = BodyParameter(),
                     body_2: str = BodyParameter(),
                 ) -> list[Item]: ...
 
         assert exc_info.value.args == ("too many body params",)
 
-    def test_many_body_optionals(self, mocker):
+    def test_many_body_optionals(self):
         with pytest.raises(ValueError) as exc_info:
 
             class TestSyncClient(lima_api.SyncLimaApi):
                 @lima_api.get("/items/split", default_exception=GenericError)
                 def sync_kwargs_overwrite_item(
                     self,
+                    *,
                     item: Optional[Item] = BodyParameter(default=None),
                     _id: Optional[int] = BodyParameter(default=None, alias="id"),
                     name: Optional[str] = BodyParameter(default=None),
                 ) -> list[Item]: ...
 
         assert exc_info.value.args == ("too many body params",)
+
+    def test_force_only_keywords(self, mocker):
+        with pytest.raises(ValueError) as exc_info:
+            class TestSyncClient(lima_api.SyncLimaApi):
+                @lima_api.get("/items/split", default_exception=GenericError)
+                def sync_kwargs_overwrite_item(
+                    self,
+                    item: Optional[Item] = BodyParameter(default=None)
+                ) -> list[Item]: ...
+
+        assert exc_info.value.args == ("positional parameters are not supported",)
 
     def test_list_objects(self, mocker):
         client_mock = self._mock_request(mocker)
