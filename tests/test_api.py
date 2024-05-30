@@ -308,7 +308,7 @@ class TestLimaParameters:
                     self, item: Optional[Item] = BodyParameter(default=None)
                 ) -> list[Item]: ...
 
-        assert exc_info.value.args == ("positional parameters are not supported",)
+        assert exc_info.value.args == ("positional parameters are not supported, use funct(self, *, ...)",)
 
     def test_list_objects(self, mocker):
         client_mock = self._mock_request(mocker)
