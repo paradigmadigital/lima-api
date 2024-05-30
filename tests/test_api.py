@@ -301,11 +301,11 @@ class TestLimaParameters:
 
     def test_force_only_keywords(self, mocker):
         with pytest.raises(ValueError) as exc_info:
+
             class TestSyncClient(lima_api.SyncLimaApi):
                 @lima_api.get("/items/split", default_exception=GenericError)
                 def sync_kwargs_overwrite_item(
-                    self,
-                    item: Optional[Item] = BodyParameter(default=None)
+                    self, item: Optional[Item] = BodyParameter(default=None)
                 ) -> list[Item]: ...
 
         assert exc_info.value.args == ("positional parameters are not supported",)
