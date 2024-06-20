@@ -10,6 +10,7 @@ from typing import (
     get_args,
     get_origin,
 )
+
 try:
     from types import UnionType
 except ImportError:
