@@ -86,6 +86,7 @@ class LimaApiBase:
         kwargs: dict,
         body_mapping: Optional[dict] = None,
         query_params_mapping: list[dict] = None,
+        header_mapping: list[dict] = None,
         undefined_values: Optional[tuple[Any, ...]] = None,
         headers: Optional[dict[str, str]] = None,
         timeout: Optional[int] = None,
@@ -118,6 +119,12 @@ class LimaApiBase:
             _headers.update(self.headers)
         if headers:
             _headers.update(headers)
+        for header in header_mapping:
+            if header["kwargs_name"] not in kwargs and "default" not in header:
+                raise TypeError(f"required argument missing <{header['kwargs_name']}>")
+            header_value = kwargs.get(header.get("kwargs_name"))
+            if header_value is not None:
+                _headers[header.get("api_name")] = header_value
 
         body_kwarg = {}
         if _headers.get("content-type", "application/json") == "application/json":
@@ -239,7 +246,12 @@ def method_factory(method):
             sig: Signature = inspect.signature(func)
             return_class = sig.return_annotation
             is_async = inspect.iscoroutinefunction(func)
-            query_params_mapping, path_params_mapping, body_mapping = get_mappings(path, sig.parameters, method)
+            (
+                query_params_mapping,
+                path_params_mapping,
+                body_mapping,
+                header_mapping,
+            ) = get_mappings(path, sig.parameters, method)
 
             if is_async:
 
@@ -252,6 +264,7 @@ def method_factory(method):
                         kwargs=kwargs,
                         body_mapping=body_mapping,
                         query_params_mapping=query_params_mapping,
+                        header_mapping=header_mapping,
                         undefined_values=undefined_values,
                         headers=headers,
                         timeout=timeout,
@@ -284,6 +297,7 @@ def method_factory(method):
                         kwargs=kwargs,
                         body_mapping=body_mapping,
                         query_params_mapping=query_params_mapping,
+                        header_mapping=header_mapping,
                         undefined_values=undefined_values,
                         headers=headers,
                         timeout=timeout,

@@ -335,3 +335,32 @@ class TestLimaParameters:
         request_kwargs = client_mock.return_value.build_request.call_args.kwargs
         assert "json" in request_kwargs
         assert request_kwargs["json"] == [{"id": 1, "name": "one"}, {"id": 2, "name": "test"}]
+
+    def test_header(self, mocker):
+        client_mock = self._mock_request(mocker)
+
+        with self.client_cls(base_url="http://localhost") as client:
+            client.sync_header(bearer="Bearer test")
+
+        assert client_mock.return_value.build_request.called
+        kwargs_call = client_mock.return_value.build_request.call_args.kwargs
+        assert "headers" in kwargs_call
+        assert "Authorization" in kwargs_call.get("headers")
+        assert kwargs_call.get("headers").get("Authorization") == "Bearer test"
+
+    def test_optional_header(self, mocker):
+        client_mock = self._mock_request(mocker)
+
+        with self.client_cls(base_url="http://localhost") as client:
+            client.sync_header()
+
+        assert client_mock.return_value.build_request.called
+        kwargs_call = client_mock.return_value.build_request.call_args.kwargs
+        assert "headers" in kwargs_call
+        assert "Authorization" not in kwargs_call.get("headers")
+
+    def test_required_header(self):
+        with self.client_cls(base_url="http://localhost") as client, pytest.raises(TypeError) as exc_info:
+            client.sync_required_header()
+
+        assert exc_info.value.args == ("required argument missing <bearer>",)

@@ -3,6 +3,7 @@ from typing import List
 import lima_api
 from lima_api.parameters import (
     BodyParameter,
+    HeaderParameter,
     PathParameter,
     QueryParameter,
 )
@@ -90,6 +91,12 @@ class SyncClient(lima_api.SyncLimaApi):
 
     @lima_api.post("/items/typing", default_exception=UnexpectedError)
     def sync_list_typing_objects(self, *, items: List[Item]) -> List[Item]: ...
+
+    @lima_api.post("/me")
+    def sync_header(self, *, bearer: str = HeaderParameter(alias="Authorization", default=None)) -> None: ...
+
+    @lima_api.post("/me")
+    def sync_required_header(self, *, bearer: str = HeaderParameter(alias="Authorization")) -> None: ...
 
 
 class SyncDeclarativeConfClient(lima_api.SyncLimaApi):
