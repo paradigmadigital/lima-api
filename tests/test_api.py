@@ -1,3 +1,4 @@
+import sys
 from typing import Optional
 
 import httpx
@@ -364,3 +365,69 @@ class TestLimaParameters:
             client.sync_required_header()
 
         assert exc_info.value.args == ("required argument missing <bearer>",)
+
+    def test_union_response_dict(self, mocker):
+        self._mock_request(mocker, content='{"test": "test"}')
+
+        with self.client_cls(base_url="http://localhost") as client:
+            response = client.sync_union()
+
+        assert response == {"test": "test"}
+
+    def test_union_response_list(self, mocker):
+        self._mock_request(mocker, content='[{"test": "test"}]')
+
+        with self.client_cls(base_url="http://localhost") as client:
+            response = client.sync_union()
+
+        assert response == [{"test": "test"}]
+
+    def test_optional_response_none(self, mocker):
+        self._mock_request(mocker, content="")
+
+        with self.client_cls(base_url="http://localhost") as client:
+            response = client.sync_optional()
+
+        assert response is None
+
+    def test_optional_response_dict(self, mocker):
+        self._mock_request(mocker, content='{"test": "test"}')
+
+        with self.client_cls(base_url="http://localhost") as client:
+            response = client.sync_optional()
+
+        assert response == {"test": "test"}
+
+    if sys.version_info[0] >= 3 and sys.version_info[1] > 9:
+
+        def test_pipe_union_response_dict(self, mocker):
+            self._mock_request(mocker, content='{"test": "test"}')
+
+            with self.client_cls(base_url="http://localhost") as client:
+                response = client.sync_pipe_union()
+
+            assert response == {"test": "test"}
+
+        def test_pipe_union_response_list(self, mocker):
+            self._mock_request(mocker, content='[{"test": "test"}]')
+
+            with self.client_cls(base_url="http://localhost") as client:
+                response = client.sync_pipe_union()
+
+            assert response == [{"test": "test"}]
+
+        def test_pipe_optional_response_none(self, mocker):
+            self._mock_request(mocker, content="")
+
+            with self.client_cls(base_url="http://localhost") as client:
+                response = client.sync_pipe_optional()
+
+            assert response is None
+
+        def test_pipe_optional_response_dict(self, mocker):
+            self._mock_request(mocker, content='{"test": "test"}')
+
+            with self.client_cls(base_url="http://localhost") as client:
+                response = client.sync_pipe_optional()
+
+            assert response == {"test": "test"}
