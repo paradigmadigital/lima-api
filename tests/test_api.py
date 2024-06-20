@@ -399,6 +399,7 @@ class TestLimaParameters:
         assert response == {"test": "test"}
 
     if sys.version_info[0] >= 3 and sys.version_info[1] > 9:
+
         def test_pipe_union_response_dict(self, mocker):
             self._mock_request(mocker, content='{"test": "test"}')
 
