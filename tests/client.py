@@ -1,4 +1,5 @@
-from typing import List
+import sys
+from typing import List, Optional, Union
 
 import lima_api
 from lima_api.parameters import (
@@ -97,6 +98,20 @@ class SyncClient(lima_api.SyncLimaApi):
 
     @lima_api.post("/me")
     def sync_required_header(self, *, bearer: str = HeaderParameter(alias="Authorization")) -> None: ...
+
+    @lima_api.post("/union")
+    def sync_union(self) -> Union[list, dict]: ...
+
+    @lima_api.post("/optional")
+    def sync_optional(self) -> Optional[dict]: ...
+
+    if sys.version_info[0] >= 3 and sys.version_info[1] > 9:
+        @lima_api.post("/union")
+        def sync_pipe_union(self) -> list | dict: ...
+
+        @lima_api.post("/optional")
+        def sync_pipe_optional(self) -> dict | None: ...
+
 
 
 class SyncDeclarativeConfClient(lima_api.SyncLimaApi):
