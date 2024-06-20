@@ -6,8 +6,14 @@ from typing import (
     Any,
     Optional,
     TypeVar,
+    Union,
     get_args,
+    get_origin,
 )
+try:
+    from types import UnionType
+except ImportError:
+    UnionType = Union
 
 from pydantic import BaseModel
 from pydantic.fields import FieldInfo
@@ -35,6 +41,8 @@ T = TypeVar("T")
 
 def parse_data(parse_class: type[T], data: bytes) -> Any:
     if parse_class is None:
+        return
+    if not data and get_origin(parse_class) in {UnionType, Union} and type(None) in get_args(parse_class):
         return
     if PYDANTIC_V2:
         parse_model = TypeAdapter(parse_class)
