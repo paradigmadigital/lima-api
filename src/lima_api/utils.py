@@ -80,6 +80,7 @@ def get_mappings(path: str, parameters: MappingProxyType[str, inspect.Parameter]
 
     query_params_mapping: list[dict] = []
     path_params_mapping: list[dict] = []
+    header_mapping: list[dict] = []
     body_mapping: Optional[dict] = None
 
     for param_name, parameter in ((k, v) for k, v in parameters.items() if k not in ["self", "args", "kwargs"]):
@@ -128,6 +129,8 @@ def get_mappings(path: str, parameters: MappingProxyType[str, inspect.Parameter]
             if body_mapping:
                 raise ValueError("too many body params")
             body_mapping = param_map
+        elif location == Location.HEADER:
+            header_mapping.append(param_map)
         else:
             raise ValueError("invalid location")
 
@@ -135,7 +138,7 @@ def get_mappings(path: str, parameters: MappingProxyType[str, inspect.Parameter]
     if missing_path_params:
         raise LimaException(f"path parameters need to be defined: <{','.join(missing_path_params)}>")
 
-    return query_params_mapping, path_params_mapping, body_mapping
+    return query_params_mapping, path_params_mapping, body_mapping, header_mapping
 
 
 def get_body(body_mapping: Optional[dict], kwargs: dict):
