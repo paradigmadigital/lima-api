@@ -458,5 +458,5 @@ class TestOpentracing:
         request, _ = httpserver.log[0]
         assert "Traceparent" in request.headers
         _, trace_id, span_id, _ = request.headers["Traceparent"].split("-")
-        assert trace_id in hex(span.context.trace_id)
-        assert span_id not in hex(span.context.span_id)
+        assert trace_id == hex(span.context.trace_id).replace('x', '')
+        assert span_id != hex(span.context.span_id).replace('x', '')
