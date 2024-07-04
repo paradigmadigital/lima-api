@@ -40,7 +40,10 @@ test = [
     "pytest",
     "pytest-cov",
     "pytest-mock",
+    "pytest-httpserver",
     "ruff",
+    "uv",
+    "opentelemetry-sdk",
 ]
 pydantic2 = [
     "pydantic[email]>=2.3.0,<3.0",
@@ -50,7 +53,7 @@ pydantic1 = [
     "pydantic[email]>=1.10,<2.0",
 ]
 all = [
-    "lima_api[test, pydantic2]",
+    "lima-api[test,pydantic2]",
 ]
 
 [tool.ruff]

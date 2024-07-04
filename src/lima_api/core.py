@@ -187,17 +187,21 @@ class LimaApi(LimaApiBase):
         client_kwargs = self.client_kwargs.copy()
         client_kwargs["timeout"] = self.timeout
         client_kwargs["transport"] = self.transport
-        self.client = httpx.AsyncClient(**self.client_kwargs)
+        client = httpx.AsyncClient(**client_kwargs)
+        self.client = await client.__aenter__()
 
     async def stop_client(self) -> None:
         if self.client:
             await self.client.aclose()
+        self.client = None
 
     async def __aenter__(self) -> "LimaApi":
         await self.start_client()
         return self
 
     async def __aexit__(self, exc_type, exc, tb) -> None:
+        if self.client is not None:
+            await self.client.__aexit__(exc_type, exc, tb)
         await self.stop_client()
 
 
@@ -212,17 +216,21 @@ class SyncLimaApi(LimaApiBase):
         client_kwargs = self.client_kwargs.copy()
         client_kwargs["timeout"] = self.timeout
         client_kwargs["transport"] = self.transport
-        self.client = httpx.Client(**self.client_kwargs)
+        client = httpx.Client(**client_kwargs)
+        self.client = client.__enter__()
 
     def stop_client(self) -> None:
         if self.client:
             self.client.close()
+        self.client = None
 
     def __enter__(self) -> "SyncLimaApi":
         self.start_client()
         return self
 
     def __exit__(self, exc_type, exc, tb) -> None:
+        if self.client is not None:
+            self.client.__exit__(exc_type, exc, tb)
         self.stop_client()
 
 

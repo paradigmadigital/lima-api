@@ -15,11 +15,14 @@ from client import (
     UnexpectedError,
 )
 from lima_api.parameters import BodyParameter
+from opentelemetry import trace
+from opentelemetry.sdk.trace import TracerProvider
+from pytest_httpserver import HTTPServer
 
 
 class TestAsyncLimaApi:
     def test_sync_client(self, mocker):
-        client_mock = mocker.patch("httpx.Client")
+        client_mock = mocker.patch("httpx.Client").return_value.__enter__
         client = AsyncClient(base_url="http://localhost/")
         client.client = httpx.AsyncClient(transport=client.transport, timeout=client.timeout)
 
@@ -30,7 +33,7 @@ class TestAsyncLimaApi:
         assert str(exc_info.value.detail) == "sync function in async client"
 
     def test_warning_async_on_sync_client(self, mocker):
-        client_mock = mocker.patch("httpx.Client")
+        client_mock = mocker.patch("httpx.Client").return_value.__enter__
         client = AsyncClient(base_url="http://localhost/")
         client.client = httpx.AsyncClient(transport=client.transport, timeout=client.timeout)
 
@@ -54,7 +57,7 @@ class TestLimaApi:
         assert client.base_url == "http://localhost:8080"
 
     def test_client_not_init_with_sync_call(self, mocker):
-        client_mock = mocker.patch("httpx.Client")
+        client_mock = mocker.patch("httpx.Client").return_value.__enter__
         client = self.client_cls(base_url="http://localhost/")
 
         with pytest.raises(lima_api.LimaException) as exc_info:
@@ -64,7 +67,7 @@ class TestLimaApi:
         assert not client_mock.return_value.send.called
 
     def test_client_field_required(self, mocker):
-        client_mock = mocker.patch("httpx.Client")
+        client_mock = mocker.patch("httpx.Client").return_value.__enter__
 
         with self.client_cls(base_url="http://localhost/") as client, pytest.raises(TypeError) as exc_info:
             client.sync_list_field_required()
@@ -73,7 +76,7 @@ class TestLimaApi:
         assert not client_mock.return_value.send.called
 
     def test_client_init_with_sync_call(self, mocker):
-        client_mock = mocker.patch("httpx.Client")
+        client_mock = mocker.patch("httpx.Client").return_value.__enter__
         client_mock.return_value.send.return_value.status_code = 200
         client_mock.return_value.send.return_value.content = '[{"id":1, "name": "test"}]'
 
@@ -86,7 +89,7 @@ class TestLimaApi:
         assert response[0] == Item(id=1, name="test")
 
     def test_client_mapping_error_for_sync_call(self, mocker):
-        client_mock = mocker.patch("httpx.Client")
+        client_mock = mocker.patch("httpx.Client").return_value.__enter__
         client_mock.return_value.send.return_value.status_code = 404
         client_mock.return_value.send.return_value.content = "File not found"
 
@@ -99,7 +102,7 @@ class TestLimaApi:
         assert str(exc_info.value.detail) == "Http Code in response_mapping"
 
     def test_client_generic_error_for_sync_call(self, mocker):
-        client_mock = mocker.patch("httpx.Client")
+        client_mock = mocker.patch("httpx.Client").return_value.__enter__
         client_mock.return_value.send.return_value.status_code = 503
         client_mock.return_value.send.return_value.content = "Service Unavailable"
 
@@ -112,7 +115,7 @@ class TestLimaApi:
         assert str(exc_info.value.detail) == "Http Code not in response_mapping"
 
     def test_client_no_headers(self, mocker):
-        client_mock = mocker.patch("httpx.Client")
+        client_mock = mocker.patch("httpx.Client").return_value.__enter__
         client_mock.return_value.send.return_value.status_code = 200
         client_mock.return_value.send.return_value.content = ""
 
@@ -145,7 +148,7 @@ class TestLimaApi:
         }
 
     def test_client_with_headers(self, mocker):
-        client_mock = mocker.patch("httpx.Client")
+        client_mock = mocker.patch("httpx.Client").return_value.__enter__
         client_mock.return_value.send.return_value.status_code = 200
         client_mock.return_value.send.return_value.content = ""
 
@@ -197,7 +200,7 @@ class TestLimaParameters:
         assert client.base_url == "http://localhost:8080"
 
     def _mock_request(self, mocker, status_code: int = 200, content: str = "[]"):
-        client_mock = mocker.patch("httpx.Client")
+        client_mock = mocker.patch("httpx.Client").return_value.__enter__
         client_mock.return_value.send.return_value.status_code = status_code
         client_mock.return_value.send.return_value.content = content
         return client_mock
@@ -431,3 +434,29 @@ class TestLimaParameters:
                 response = client.sync_pipe_optional()
 
             assert response == {"test": "test"}
+
+
+class TestOpentracing:
+    def setup_method(self):
+        self.client_cls = SyncClient
+
+    def test_opentracing(self, httpserver: HTTPServer):
+        base_url = httpserver.url_for("")
+        httpserver.expect_request("/items").respond_with_json([])
+
+        provider = TracerProvider()
+        trace.set_tracer_provider(provider)
+        tracer = trace.get_tracer("lima-example")
+
+        with (
+            tracer.start_as_current_span("event-loop") as span,
+            self.client_cls(base_url) as client,
+        ):
+            client.sync_list()
+
+        assert len(httpserver.log) == 1
+        request, _ = httpserver.log[0]
+        assert "Traceparent" in request.headers
+        _, trace_id, span_id, _ = request.headers["Traceparent"].split("-")
+        assert trace_id == hex(span.context.trace_id)[2:]
+        assert span_id != hex(span.context.span_id)[2:]
