@@ -296,7 +296,7 @@ def method_factory(method):
 
             else:
 
-                def _func(self: LimaApi, *args: Any, **kwargs: Any) -> Any:
+                def _func(self: SyncLimaApi, *args: Any, **kwargs: Any) -> Any:
                     api_request = self._create_request(
                         sync=not is_async,
                         method=method,
