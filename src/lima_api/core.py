@@ -187,7 +187,7 @@ class LimaApi(LimaApiBase):
         client_kwargs = self.client_kwargs.copy()
         client_kwargs["timeout"] = self.timeout
         client_kwargs["transport"] = self.transport
-        client = httpx.AsyncClient(**client_kwargs)
+        client = httpx.AsyncClient(**client_kwargs)  # noqa: S113
         self.client = await client.__aenter__()
 
     async def stop_client(self) -> None:
@@ -216,7 +216,7 @@ class SyncLimaApi(LimaApiBase):
         client_kwargs = self.client_kwargs.copy()
         client_kwargs["timeout"] = self.timeout
         client_kwargs["transport"] = self.transport
-        client = httpx.Client(**client_kwargs)
+        client = httpx.Client(**client_kwargs)  # noqa: S113
         self.client = client.__enter__()
 
     def stop_client(self) -> None:
