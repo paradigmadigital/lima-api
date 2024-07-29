@@ -92,12 +92,12 @@ class LimaApiBase:
         timeout: Optional[int] = None,
     ) -> httpx.Request:
         if self.client is None:
-            raise LimaException("uninitialized client")
+            raise LimaException(detail="uninitialized client")
 
         if sync and inspect.iscoroutinefunction(self.client.send):
-            raise LimaException("sync function in async client")
+            raise LimaException(detail="sync function in async client")
         elif not sync and not inspect.iscoroutinefunction(self.client.send):
-            raise LimaException("async function in sync client")
+            raise LimaException(detail="async function in sync client")
 
         params = get_request_params(
             query_params_mapping,
