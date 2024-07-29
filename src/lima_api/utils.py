@@ -45,11 +45,18 @@ def parse_data(parse_class: type[T], data: bytes) -> Any:
         return
     if not data and get_origin(parse_class) in {UnionType, Union} and type(None) in get_args(parse_class):
         return
-    if PYDANTIC_V2:
-        parse_model = TypeAdapter(parse_class)
-        return parse_model.validate_json(data)
-    else:
-        return parse_raw_as(parse_class, data)
+    if type(data) == parse_class:
+        return data
+    try:
+        if PYDANTIC_V2:
+            parse_model = TypeAdapter(parse_class)
+            return parse_model.validate_json(data)
+        else:
+            return parse_raw_as(parse_class, data)
+    except Exception as ex:
+        if parse_class == Any:
+            return data
+        raise ex
 
 
 def get_request_params(query_params_mapping: list[dict], kwargs: dict, undefined_values: tuple[Any, ...]) -> dict:
