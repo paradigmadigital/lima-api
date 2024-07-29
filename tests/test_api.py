@@ -78,7 +78,7 @@ class TestLimaApi:
     def test_client_init_with_sync_call(self, mocker):
         client_mock = mocker.patch("httpx.Client").return_value.__enter__
         client_mock.return_value.send.return_value.status_code = 200
-        client_mock.return_value.send.return_value.content = '[{"id":1, "name": "test"}]'
+        client_mock.return_value.send.return_value.content = b'[{"id":1, "name": "test"}]'
 
         client = self.client_cls(base_url="http://localhost/")
         client.start_client()
@@ -176,6 +176,54 @@ class TestLimaApi:
             "client_id": "client_id",
             "grant_type": "grant_type",
         }
+
+    def test_client_get_bytes_json(self, mocker):
+        client_mock = mocker.patch("httpx.Client").return_value.__enter__
+        client_mock.return_value.send.return_value.status_code = 200
+        client_mock.return_value.send.return_value.content = b'[{"id": 1, "name": "test"}]'
+
+        client = self.client_cls(base_url="http://localhost/")
+        client.start_client()
+        response = client.sync_get_bytes()
+
+        assert client_mock.return_value.send.called
+        assert response == b'[{"id": 1, "name": "test"}]'
+
+    def test_client_get_bytes_no_json(self, mocker):
+        client_mock = mocker.patch("httpx.Client").return_value.__enter__
+        client_mock.return_value.send.return_value.status_code = 200
+        client_mock.return_value.send.return_value.content = b"Just a test"
+
+        client = self.client_cls(base_url="http://localhost/")
+        client.start_client()
+        response = client.sync_get_bytes()
+
+        assert client_mock.return_value.send.called
+        assert response == b"Just a test"
+
+    def test_client_get_any_json(self, mocker):
+        client_mock = mocker.patch("httpx.Client").return_value.__enter__
+        client_mock.return_value.send.return_value.status_code = 200
+        client_mock.return_value.send.return_value.content = b'[{"id": 1, "name": "test"}]'
+
+        client = self.client_cls(base_url="http://localhost/")
+        client.start_client()
+        response = client.sync_get_any()
+
+        assert client_mock.return_value.send.called
+        assert response == [{"id": 1, "name": "test"}]
+
+    def test_client_get_any_no_json(self, mocker):
+        client_mock = mocker.patch("httpx.Client").return_value.__enter__
+        client_mock.return_value.send.return_value.status_code = 200
+        client_mock.return_value.send.return_value.content = b"Just a test"
+
+        client = self.client_cls(base_url="http://localhost/")
+        client.start_client()
+        response = client.sync_get_any()
+
+        assert client_mock.return_value.send.called
+        assert response == b"Just a test"
 
 
 class TestDeclarativeConfLimaApi(TestLimaApi):

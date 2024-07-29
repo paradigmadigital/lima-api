@@ -1,5 +1,10 @@
 import sys
-from typing import List, Optional, Union
+from typing import (
+    Any,
+    List,
+    Optional,
+    Union,
+)
 
 import lima_api
 from lima_api.parameters import (
@@ -65,6 +70,12 @@ class SyncClient(lima_api.SyncLimaApi):
         response_mapping={400: GenericError},
     )
     def do_login_form(self, *, login: LoginDataValidate) -> None: ...
+
+    @lima_api.get("/bytes")
+    def sync_get_bytes(self) -> bytes: ...
+
+    @lima_api.get("/any")
+    def sync_get_any(self) -> Any: ...
 
     @lima_api.get("/items/query", default_exception=UnexpectedError)
     def sync_list_query(self, *, limit: int = QueryParameter(le=100)) -> list[Item]: ...
@@ -163,3 +174,9 @@ class SyncDeclarativeConfClient(lima_api.SyncLimaApi):
 
     @lima_api.post("/items/typing")
     def sync_list_typing_objects(self, *, items: List[Item]) -> List[Item]: ...  #
+
+    @lima_api.get("/bytes")
+    def sync_get_bytes(self) -> bytes: ...
+
+    @lima_api.get("/any")
+    def sync_get_any(self) -> Any: ...
