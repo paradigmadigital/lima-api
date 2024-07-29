@@ -45,7 +45,7 @@ def parse_data(parse_class: type[T], data: bytes) -> Any:
         return
     if not data and get_origin(parse_class) in {UnionType, Union} and type(None) in get_args(parse_class):
         return
-    if type(data) == parse_class:
+    if type(data) == parse_class:  # noqa: E721
         return data
     try:
         if PYDANTIC_V2:
