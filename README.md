@@ -145,8 +145,8 @@ The functions parameters will mapping with the following criteria.
 
     class PetFilterStatus(BaseModel):
         status: list[PetStatus]
-    
-   
+
+
     class PetApi(lima_api.LimaApi):
         ...
 
@@ -163,3 +163,15 @@ The functions parameters will mapping with the following criteria.
     @lima_api.get("/pets/[petId]")
     async def get_pet(self, petId: str) -> Pet: ...
    ```
+
+## Helps for developers
+
+By default, lima-api don't log any information, whoever in some cases you need log information.
+
+In order to solve this and becases the log level could be different for each case, we decide create the function `def log(self, *, event: lima_api.LogEvent, **kwargs)` which could be overwritten.
+
+### Create requirement file locally
+```shell
+uv pip compile pyproject.toml --extra=test --extra=pydantic2 > requirements.txt
+uv pip install requirements.txt
+```

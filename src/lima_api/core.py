@@ -1,4 +1,5 @@
 import inspect
+from enum import Enum
 from inspect import Signature
 from typing import Any, Callable, Optional, Union
 
@@ -22,6 +23,14 @@ DEFAULT_HTTP_RETRIES = settings.lima_default_http_retries
 DEFAULT_HTTP_TIMEOUT = settings.lima_default_http_timeout
 DEFAULT_RESPONSE_CODE = settings.lima_default_response_code
 DEFAULT_UNDEFINED_VALUES: tuple[Any, ...] = (None, "")
+
+
+class LogEvent(str, Enum):
+    START_CLIENT = "start_client"
+    BUILD_REQUEST = "build_request"
+    SEND_REQUEST = "send_request"
+    RECEIVED_RESPONSE = "received_response"
+    STOP_CLIENT = "stop_client"
 
 
 class LimaApiBase:
@@ -75,6 +84,14 @@ class LimaApiBase:
         self.transport: Optional[Union[SyncOpenTelemetryTransport, AsyncOpenTelemetryTransport]] = None
         self.client: Optional[Union[httpx.Client, httpx.AsyncClient]] = None
         self.client_kwargs.update(client_kwargs or {})
+
+    def log(self, *, event: LogEvent, **kwargs) -> None:
+        """
+        Allow to customize logs inside the Lima flow.
+        :param event: Where is the log "printed"
+        :param kwargs: Data to be or not to be logged
+        """
+        ...
 
     def _create_request(
         self,
@@ -132,12 +149,24 @@ class LimaApiBase:
         else:
             body_kwarg["data"] = body
 
+        timeout = timeout if timeout is not None else self.timeout
+
+        self.log(
+            event=LogEvent.BUILD_REQUEST,
+            path=path,
+            method=method,
+            url=final_url,
+            params=params,
+            headers=_headers,
+            timeout=timeout,
+            **body_kwarg
+        )
         api_request = self.client.build_request(
             method,
             final_url,
             params=params,
             headers=_headers,
-            timeout=timeout if timeout is not None else self.timeout,
+            timeout=timeout,
             **body_kwarg,
         )
         return api_request
@@ -157,6 +186,12 @@ class LimaApiBase:
             mapping.update(response_mapping)
         exp_cls = default_exception if default_exception is not None else self.default_exception
 
+        self.log(
+            event=LogEvent.RECEIVED_RESPONSE,
+            response=api_response,
+            response_mapping=mapping,
+            return_class=return_class,
+        )
         if api_response.status_code == (
             default_response_code if default_response_code is not None else self.default_response_code
         ):
@@ -188,9 +223,14 @@ class LimaApi(LimaApiBase):
         client_kwargs["timeout"] = self.timeout
         client_kwargs["transport"] = self.transport
         client = httpx.AsyncClient(**client_kwargs)  # noqa: S113
+        self.log(
+            event=LogEvent.START_CLIENT,
+            **client_kwargs,
+        )
         self.client = await client.__aenter__()
 
     async def stop_client(self) -> None:
+        self.log(event=LogEvent.STOP_CLIENT)
         if self.client:
             await self.client.aclose()
         self.client = None
@@ -217,9 +257,14 @@ class SyncLimaApi(LimaApiBase):
         client_kwargs["timeout"] = self.timeout
         client_kwargs["transport"] = self.transport
         client = httpx.Client(**client_kwargs)  # noqa: S113
+        self.log(
+            event=LogEvent.START_CLIENT,
+            **client_kwargs,
+        )
         self.client = client.__enter__()
 
     def stop_client(self) -> None:
+        self.log(event=LogEvent.STOP_CLIENT)
         if self.client:
             self.client.close()
         self.client = None
@@ -279,6 +324,10 @@ def method_factory(method):
                     )
 
                     try:
+                        self.log(
+                            event=LogEvent.START_CLIENT,
+                            request=api_request,
+                        )
                         api_response = await self.client.send(api_request, follow_redirects=True)
                     except httpx.HTTPError as exc:
                         raise LimaException(
@@ -312,6 +361,10 @@ def method_factory(method):
                     )
 
                     try:
+                        self.log(
+                            event=LogEvent.START_CLIENT,
+                            request=api_request,
+                        )
                         api_response = self.client.send(api_request, follow_redirects=True)
                     except httpx.HTTPError as exc:
                         raise LimaException(
