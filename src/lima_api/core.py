@@ -325,7 +325,7 @@ def method_factory(method):
 
                     try:
                         self.log(
-                            event=LogEvent.START_CLIENT,
+                            event=LogEvent.SEND_REQUEST,
                             request=api_request,
                         )
                         api_response = await self.client.send(api_request, follow_redirects=True)
@@ -362,7 +362,7 @@ def method_factory(method):
 
                     try:
                         self.log(
-                            event=LogEvent.START_CLIENT,
+                            event=LogEvent.SEND_REQUEST,
                             request=api_request,
                         )
                         api_response = self.client.send(api_request, follow_redirects=True)
