@@ -197,8 +197,9 @@ class LimaApiBase:
         ):
             response = parse_data(return_class, api_response.content)
         elif api_response.status_code in mapping:
-            raise mapping[api_response.status_code](
-                detail="Http Code in response_mapping",
+            ex_cls: type[LimaException] = mapping[api_response.status_code]
+            raise ex_cls(
+                detail=ex_cls.detail or "Http Code in response_mapping",
                 status_code=api_response.status_code,
                 content=api_response.content,
             )

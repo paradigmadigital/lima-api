@@ -2,9 +2,7 @@ from typing import Optional
 
 
 class LimaException(Exception):
-    detail: str = "Error de Lima"
-    status_code: int = -1
-    content: bytes = b""
+    detail: str = ""
 
     def __init__(
         self,
@@ -15,10 +13,8 @@ class LimaException(Exception):
     ):
         if detail is not None:
             self.detail = detail
-        if status_code is not None:
-            self.status_code = status_code
-        if content is not None:
-            self.content = content
+        self.status_code = status_code
+        self.content = content
 
     def __repr__(self) -> str:
         class_name = self.__class__.__name__
