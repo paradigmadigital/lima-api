@@ -3,6 +3,11 @@ Lima-API is sync and async library that allows implements Rest APIs libs with py
 
 You could read more about it on [our post (Spanish)](https://www.paradigmadigital.com/dev/poder-del-tipado-python-funciones-sin-codigo/).
 
+You could install from [pypi](https://pypi.org/project/lima-api/) with:
+```shell
+pip install lima-api
+```
+
 # Howto use it
 1. Create your [Pydantic](https://docs.pydantic.dev/latest/) models.
     ```python
