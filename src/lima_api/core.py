@@ -159,7 +159,7 @@ class LimaApiBase:
             params=params,
             headers=_headers,
             timeout=timeout,
-            **body_kwarg
+            **body_kwarg,
         )
         api_request = self.client.build_request(
             method,
