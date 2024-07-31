@@ -166,7 +166,7 @@ The functions parameters will mapping with the following criteria.
    For example with `lima_bracket_regex = r"\[(.+?)\]"`
    ```python
     @lima_api.get("/pets/[petId]")
-    async def get_pet(self, petId: str) -> Pet: ...
+    async def get_pet(self, *, petId: str) -> Pet: ...
    ```
 
 ## Helps for developers
@@ -174,6 +174,23 @@ The functions parameters will mapping with the following criteria.
 By default, lima-api don't log any information, whoever in some cases you need log information.
 
 In order to solve this and becases the log level could be different for each case, we decide create the function `def log(self, *, event: lima_api.LogEvent, **kwargs)` which could be overwritten.
+
+```python
+class PetApi(lima_api.LimaApi):
+    def log(self, *, event: lima_api.LogEvent, **kwargs) -> None:
+        if event == lima_api.LogEvent.RECEIVED_RESPONSE:
+            response: httpx.Response = kwargs.get("response")
+            logger.info(
+                "Request completed",
+                extra={
+                    "url": response.request.url,
+                    "elapsed": response.elapsed,
+                    "method": response.request.method,
+                    "service_status": response.status_code,
+                }
+           )
+    ...
+```
 
 ### Create requirement file locally
 ```shell
