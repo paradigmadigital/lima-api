@@ -116,6 +116,9 @@ class SyncClient(lima_api.SyncLimaApi):
     @lima_api.post("/optional")
     def sync_optional(self) -> Optional[dict]: ...
 
+    @lima_api.get("/async_on_sync")
+    async def async_on_sync(self) -> Optional[dict]: ...
+
     if sys.version_info[0] >= 3 and sys.version_info[1] > 9:
 
         @lima_api.post("/union")

@@ -1,12 +1,18 @@
-from typing import Optional
+import json
+from typing import Optional, TypeVar
+
+from .utils import parse_data
+
+
+T = TypeVar("T")
 
 
 class LimaException(Exception):
     detail: str = ""
+    model: Optional[T] = None
 
     def __init__(
         self,
-        *,
         detail: Optional[str] = None,
         status_code: Optional[int] = None,
         content: Optional[bytes] = None,
@@ -22,3 +28,10 @@ class LimaException(Exception):
 
     def __str__(self) -> str:
         return self.detail
+
+    def json(self):
+        return json.dumps(self.content.decode())
+
+    def response(self) -> Optional[T]:
+        if self.model and self.content:
+            return parse_data(self.model, self.content)
