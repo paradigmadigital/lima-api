@@ -33,7 +33,6 @@ else:
     TypeAdapter = None
     from pydantic import parse_raw_as
 
-from .exceptions import LimaException
 
 BRACKET_REGEX = re.compile(settings.lima_bracket_regex)
 
@@ -152,7 +151,9 @@ def get_mappings(path: str, parameters: MappingProxyType[str, inspect.Parameter]
 
     missing_path_params = set(path_params) - {p["api_name"] for p in path_params_mapping}
     if missing_path_params:
-        raise LimaException(f"path parameters need to be defined: <{','.join(missing_path_params)}>")
+        from .exceptions import LimaException
+
+        raise LimaException(detail=f"path parameters need to be defined: <{','.join(missing_path_params)}>")
 
     return query_params_mapping, path_params_mapping, body_mapping, header_mapping
 

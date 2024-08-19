@@ -1,3 +1,4 @@
+import asyncio
 import sys
 from typing import Optional
 
@@ -14,6 +15,7 @@ from client import (
     SyncDeclarativeConfClient,
     UnexpectedError,
 )
+from lima_api import LimaException
 from lima_api.parameters import BodyParameter
 from opentelemetry import trace
 from opentelemetry.sdk.trace import TracerProvider
@@ -42,6 +44,17 @@ class TestAsyncLimaApi:
 
         assert not client_mock.return_value.send.called
         assert str(exc_info.value.detail) == "sync function in async client"
+
+    def test_warning_sync_on_async_client(self, mocker):
+        client_mock = mocker.patch("httpx.Client").return_value.__enter__
+        with (
+            SyncClient(base_url="http://localhost/") as client,
+            pytest.raises(lima_api.LimaException) as exc_info,
+        ):
+            asyncio.run(client.async_on_sync())
+
+        assert not client_mock.return_value.send.called
+        assert str(exc_info.value.detail) == "async function in sync client"
 
 
 class TestLimaApi:
@@ -235,6 +248,13 @@ class TestDeclarativeConfLimaApi(TestLimaApi):
         self.client_cls = SyncDeclarativeConfClient
 
 
+class TestLimaHttpErrors:
+    def setup_method(self):
+        self.client_cls = SyncClient
+
+    def test_a(self): ...
+
+
 class TestLimaParameters:
     """
     TestClient
@@ -278,6 +298,15 @@ class TestLimaParameters:
         request_kwargs = client_mock.return_value.build_request.call_args.kwargs
         assert "json" in request_kwargs
         assert request_kwargs["json"] == {"limit": 2}
+
+    def test_get_missing_path(self):
+        with pytest.raises(LimaException) as exc_info:
+
+            class SyncClient(lima_api.SyncLimaApi):
+                @lima_api.get("/items/{missing}")
+                def sync_body_split(self) -> None: ...
+
+        assert exc_info.value.detail == "path parameters need to be defined: <missing>"
 
     def test_get_path(self, mocker):
         client_mock = self._mock_request(mocker)
