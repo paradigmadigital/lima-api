@@ -4,13 +4,14 @@ from inspect import Signature
 from typing import Any, Callable, Optional, Union
 
 import httpx
+import pydantic
 from opentelemetry.instrumentation.httpx import (
     AsyncOpenTelemetryTransport,
     SyncOpenTelemetryTransport,
 )
 
 from .config import settings
-from .exceptions import LimaException
+from .exceptions import LimaException, ValidationError
 from .utils import (
     get_body,
     get_final_url,
@@ -195,7 +196,13 @@ class LimaApiBase:
         if api_response.status_code == (
             default_response_code if default_response_code is not None else self.default_response_code
         ):
-            response = parse_data(return_class, api_response.content)
+            try:
+                response = parse_data(return_class, api_response.content)
+            except pydantic.ValidationError as ex:
+                raise ValidationError(
+                    status_code=api_response.status_code,
+                    content=api_response.content,
+                ) from ex
         elif api_response.status_code in mapping:
             ex_cls: type[LimaException] = mapping[api_response.status_code]
             raise ex_cls(

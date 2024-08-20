@@ -1,8 +1,10 @@
+import contextlib
 import json
-from typing import Optional, TypeVar
+from typing import Optional, TypeVar, Union
+
+import pydantic
 
 from .utils import parse_data
-
 
 T = TypeVar("T")
 
@@ -32,6 +34,19 @@ class LimaException(Exception):
     def json(self):
         return json.dumps(self.content.decode())
 
-    def response(self) -> Optional[T]:
-        if self.model and self.content:
-            return parse_data(self.model, self.content)
+    def object(self):
+        return parse_data(self.model, self.content)
+
+    def response(self) -> Union[T, dict, bytes]:
+        response = self.content
+        if self.content:
+            with contextlib.suppress(json.JSONDecodeError):
+                response = self.json()
+            if self.model:
+                with contextlib.suppress(pydantic.ValidationError):
+                    response = self.object()
+        return response
+
+
+class ValidationError(LimaException):
+    detail = "Validation error"

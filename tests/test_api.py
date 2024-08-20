@@ -3,7 +3,6 @@ import sys
 from typing import Optional
 
 import httpx
-import lima_api
 import pytest
 from client import (
     AsyncClient,
@@ -15,11 +14,13 @@ from client import (
     SyncDeclarativeConfClient,
     UnexpectedError,
 )
-from lima_api import LimaException
-from lima_api.parameters import BodyParameter
 from opentelemetry import trace
 from opentelemetry.sdk.trace import TracerProvider
 from pytest_httpserver import HTTPServer
+
+import lima_api
+from lima_api import LimaException
+from lima_api.parameters import BodyParameter
 
 
 class TestAsyncLimaApi:
