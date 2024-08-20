@@ -6,6 +6,9 @@ from typing import (
     Union,
 )
 
+from pydantic import BaseModel
+from pydantic.fields import FieldInfo
+
 import lima_api
 from lima_api.parameters import (
     BodyParameter,
@@ -13,8 +16,6 @@ from lima_api.parameters import (
     PathParameter,
     QueryParameter,
 )
-from pydantic import BaseModel
-from pydantic.fields import FieldInfo
 
 
 class Item(BaseModel):
