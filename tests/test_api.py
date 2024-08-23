@@ -72,6 +72,28 @@ class TestLimaApi:
         assert str(exc_info.value) == "uninitialized client"
         assert not client_mock.send.called
 
+    def test_client_not_init_with_auto_start(self, mocker):
+        client_mock = mocker.patch("httpx.Client").return_value.__enter__.return_value
+        client_mock.send.return_value.status_code = 200
+        client_mock.send.return_value.content = b'[{"id":1, "name": "test"}]'
+
+        client = self.client_cls(base_url="http://localhost/", auto_start=True)
+        client.sync_list()
+
+        assert client_mock.send.called
+        assert client.client is None
+
+    def test_client_not_init_with_auto_start_and_not_auto_close(self, mocker):
+        client_mock = mocker.patch("httpx.Client").return_value.__enter__.return_value
+        client_mock.send.return_value.status_code = 200
+        client_mock.send.return_value.content = b'[{"id":1, "name": "test"}]'
+
+        client = self.client_cls(base_url="http://localhost/", auto_start=True, auto_close=False)
+        client.sync_list()
+
+        assert client_mock.send.called
+        assert client.client is not None
+
     def test_client_field_required(self, mocker):
         client_mock = mocker.patch("httpx.Client").return_value.__enter__
 
