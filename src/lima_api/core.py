@@ -1,5 +1,6 @@
 import inspect
 import json
+import sys
 from enum import Enum
 from inspect import Signature
 from typing import Any, Callable, Optional, Union
@@ -67,6 +68,7 @@ class LimaApiBase:
         undefined_values: tuple[Any, ...] = None,
         default_exception: Optional[type[LimaException]] = None,
         client_kwargs: Optional[dict] = None,
+        auto_start: bool = False,
     ):
         self.base_url: str = base_url
 
@@ -86,6 +88,7 @@ class LimaApiBase:
         self.transport: Optional[Union[SyncOpenTelemetryTransport, AsyncOpenTelemetryTransport]] = None
         self.client: Optional[Union[httpx.Client, httpx.AsyncClient]] = None
         self.client_kwargs.update(client_kwargs or {})
+        self.auto_start = auto_start
 
     def log(self, *, event: LogEvent, **kwargs) -> None:
         """
@@ -255,11 +258,16 @@ class LimaApi(LimaApiBase):
 
 
 class SyncLimaApi(LimaApiBase):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, auto_close: bool = True, **kwargs):
+        self.auto_close: bool = auto_close
         super().__init__(*args, **kwargs)
         transport = httpx.HTTPTransport(retries=self.retries)
         self.transport: SyncOpenTelemetryTransport = SyncOpenTelemetryTransport(transport)
         self.client: Optional[httpx.Client] = None
+
+    def __del__(self):
+        if self.client:
+            self.__exit__(None, None, None)
 
     def start_client(self) -> None:
         client_kwargs = self.client_kwargs.copy()
@@ -318,6 +326,11 @@ def method_factory(method):
             if is_async:
 
                 async def _func(self: LimaApi, *args: Any, **kwargs: Any) -> Any:
+                    auto_close = False
+                    if self.auto_start and (self.client is None or self.client.is_closed):
+                        auto_close = True
+                        await self.__aenter__()
+
                     api_request = self._create_request(
                         sync=not is_async,
                         method=method,
@@ -346,6 +359,9 @@ def method_factory(method):
                         raise LimaException(
                             detail=f"Connection error {url} - {exc.__class__} - {exc}",
                         ) from exc
+                    finally:
+                        if auto_close:
+                            await self.__aexit__(*sys.exc_info())
 
                     response = self._create_response(
                         api_response=api_response,
@@ -359,6 +375,11 @@ def method_factory(method):
             else:
 
                 def _func(self: SyncLimaApi, *args: Any, **kwargs: Any) -> Any:
+                    auto_close = False
+                    if self.auto_start and (self.client is None or self.client.is_closed):
+                        auto_close = self.auto_close
+                        self.__enter__()
+
                     api_request = self._create_request(
                         sync=not is_async,
                         method=method,
@@ -387,6 +408,9 @@ def method_factory(method):
                         raise LimaException(
                             detail=f"Connection error {url} - {exc.__class__} - {exc}",
                         ) from exc
+                    finally:
+                        if auto_close:
+                            self.__exit__(*sys.exc_info())
 
                     response = self._create_response(
                         api_response=api_response,
