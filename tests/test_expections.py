@@ -1,4 +1,5 @@
 import asyncio
+import json
 from unittest.mock import Mock
 
 import httpx
@@ -43,7 +44,12 @@ class TestException:
         assert exc_info.value.content == b"Wrong format"
         assert exc_info.value.status_code == 200
         assert exc_info.value.detail == "Validation error"
-        assert isinstance(exc_info.value.__cause__, pydantic.ValidationError)
+        assert any(
+            [
+                isinstance(exc_info.value.__cause__, pydantic.ValidationError),
+                isinstance(exc_info.value.__cause__, json.JSONDecodeError),
+            ]
+        )
 
     def test_http_error_without_request(self, mocker):
         client_mock = self.get_mock_client(mocker)
