@@ -78,6 +78,7 @@ class TestException:
 
 
 if sys.version_info[0] >= 3 and sys.version_info[1] > 9:
+
     class TestAsyncException(TestException):
         client_cls = AsyncClient
 
