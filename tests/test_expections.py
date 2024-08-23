@@ -22,8 +22,7 @@ class CustomException(lima_api.LimaException):
 
 
 class TestException:
-    def setup_method(self):
-        self.client_cls = SyncClient
+    client_cls = SyncClient
 
     def make_query(self):
         with self.client_cls(base_url="http://localhost/") as client, pytest.raises(lima_api.LimaException) as exc_info:
@@ -72,8 +71,7 @@ class TestException:
 
 
 class TestAsyncException(TestException):
-    def setup_method(self):
-        self.client_cls = AsyncClient
+    client_cls = AsyncClient
 
     def get_mock_client(self, mocker):
         return mocker.patch("httpx.AsyncClient").return_value.__aenter__.return_value

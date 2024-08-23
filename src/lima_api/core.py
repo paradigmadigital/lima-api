@@ -1,4 +1,5 @@
 import inspect
+import json
 from enum import Enum
 from inspect import Signature
 from typing import Any, Callable, Optional, Union
@@ -198,7 +199,7 @@ class LimaApiBase:
         ):
             try:
                 response = parse_data(return_class, api_response.content)
-            except pydantic.ValidationError as ex:
+            except (pydantic.ValidationError, json.JSONDecodeError) as ex:
                 raise ValidationError(
                     status_code=api_response.status_code,
                     content=api_response.content,
@@ -343,7 +344,7 @@ def method_factory(method):
                         except RuntimeError:
                             url = api_request.url
                         raise LimaException(
-                            detail=f"Connection error {url} - {exc.__class__} - {exc}"
+                            detail=f"Connection error {url} - {exc.__class__} - {exc}",
                         ) from exc
 
                     response = self._create_response(
@@ -384,7 +385,7 @@ def method_factory(method):
                         except RuntimeError:
                             url = api_request.url
                         raise LimaException(
-                            detail=f"Connection error {url} - {exc.__class__} - {exc}"
+                            detail=f"Connection error {url} - {exc.__class__} - {exc}",
                         ) from exc
 
                     response = self._create_response(
