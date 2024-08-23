@@ -4,7 +4,6 @@ from unittest.mock import Mock
 import httpx
 import pydantic
 import pytest
-
 from client import (
     AsyncClient,
     SyncClient,
@@ -37,15 +36,14 @@ class TestException:
     def test_validation_error(self, mocker):
         client_mock = self.get_mock_client(mocker)
         client_mock.send.return_value.status_code = 200
-        client_mock.send.return_value.content = "Wrong format"
+        client_mock.send.return_value.content = b"Wrong format"
 
         exc_info = self.make_query()
 
-        assert client_mock.send.called
         assert isinstance(exc_info.value, lima_api.ValidationError)
-        assert str(exc_info.value.content) == "Wrong format"
-        assert str(exc_info.value.status_code) == "200"
-        assert str(exc_info.value.detail) == "Validation error"
+        assert exc_info.value.content == b"Wrong format"
+        assert exc_info.value.status_code == 200
+        assert exc_info.value.detail == "Validation error"
         assert isinstance(exc_info.value.__cause__, pydantic.ValidationError)
 
     def test_http_error_without_request(self, mocker):
@@ -64,7 +62,7 @@ class TestException:
         client_mock = self.get_mock_client(mocker)
         exc = httpx.HTTPError("Internal Server Error")
         client_mock.send.side_effect = exc
-        exc._request = type('FakeRequest', (object,), {'url': "http://fakeurl"})()
+        exc._request = type("FakeRequest", (object,), {"url": "http://fakeurl"})()
 
         exc_info = self.make_query()
 

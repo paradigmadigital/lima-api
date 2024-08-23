@@ -110,20 +110,20 @@ class TestLimaApi:
     def test_client_generic_error_for_sync_call(self, mocker):
         client_mock = mocker.patch("httpx.Client").return_value.__enter__.return_value
         client_mock.send.return_value.status_code = 503
-        client_mock.send.return_value.content = "Service Unavailable"
+        client_mock.send.return_value.content = b"Service Unavailable"
 
         with self.client_cls(base_url="http://localhost/") as client, pytest.raises(UnexpectedError) as exc_info:
             client.sync_list()
 
         assert client_mock.send.called
-        assert str(exc_info.value.content) == "Service Unavailable"
-        assert str(exc_info.value.status_code) == "503"
-        assert str(exc_info.value.detail) == "Http Code not in response_mapping"
+        assert exc_info.value.content == b"Service Unavailable"
+        assert exc_info.value.status_code == 503
+        assert exc_info.value.detail == "Http Code not in response_mapping"
 
     def test_client_no_headers(self, mocker):
         client_mock = mocker.patch("httpx.Client").return_value.__enter__
         client_mock.return_value.send.return_value.status_code = 200
-        client_mock.return_value.send.return_value.content = ""
+        client_mock.return_value.send.return_value.content = b""
 
         with self.client_cls(base_url="http://localhost") as client:
             client.do_login(
@@ -156,7 +156,7 @@ class TestLimaApi:
     def test_client_with_headers(self, mocker):
         client_mock = mocker.patch("httpx.Client").return_value.__enter__
         client_mock.return_value.send.return_value.status_code = 200
-        client_mock.return_value.send.return_value.content = ""
+        client_mock.return_value.send.return_value.content = b""
 
         with self.client_cls(base_url="http://localhost") as client:
             client.do_login_form(
