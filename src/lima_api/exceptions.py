@@ -32,7 +32,7 @@ class LimaException(Exception):
         return self.detail
 
     def json(self):
-        return json.dumps(self.content.decode())
+        return json.loads(self.content.decode())
 
     def object(self):
         return parse_data(self.model, self.content)
@@ -42,9 +42,9 @@ class LimaException(Exception):
         if self.content:
             with contextlib.suppress(json.JSONDecodeError):
                 response = self.json()
-            if self.model:
-                with contextlib.suppress(pydantic.ValidationError):
-                    response = self.object()
+                if self.model:
+                    with contextlib.suppress(pydantic.ValidationError):
+                        response = self.object()
         return response
 
 

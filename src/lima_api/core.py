@@ -338,8 +338,12 @@ def method_factory(method):
                         )
                         api_response = await self.client.send(api_request, follow_redirects=True)
                     except httpx.HTTPError as exc:
+                        try:
+                            url = exc.request.url
+                        except RuntimeError:
+                            url = api_request.url
                         raise LimaException(
-                            detail=f"Connection error {exc.request.url} - {exc.__class__} - {exc}"
+                            detail=f"Connection error {url} - {exc.__class__} - {exc}"
                         ) from exc
 
                     response = self._create_response(
@@ -375,8 +379,12 @@ def method_factory(method):
                         )
                         api_response = self.client.send(api_request, follow_redirects=True)
                     except httpx.HTTPError as exc:
+                        try:
+                            url = exc.request.url
+                        except RuntimeError:
+                            url = api_request.url
                         raise LimaException(
-                            detail=f"Connection error {exc.request.url} - {exc.__class__} - {exc}"
+                            detail=f"Connection error {url} - {exc.__class__} - {exc}"
                         ) from exc
 
                     response = self._create_response(

@@ -43,6 +43,9 @@ class AsyncClient(lima_api.LimaApi):
     @lima_api.get("/items", default_exception=GenericError)
     def sync_list(self, *, limit: int = FieldInfo(le=100)) -> list[Item]: ...
 
+    @lima_api.get("/items", default_exception=GenericError)
+    async def async_list(self, *, limit: int = FieldInfo(default=100)) -> list[Item]: ...
+
 
 class SyncClient(lima_api.SyncLimaApi):
     @lima_api.get("/items", default_exception=UnexpectedError)
