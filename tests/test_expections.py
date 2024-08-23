@@ -1,5 +1,6 @@
 import asyncio
 import json
+import sys
 from unittest.mock import Mock
 
 import httpx
@@ -76,20 +77,21 @@ class TestException:
         assert isinstance(exc_info.value.__cause__, httpx.HTTPError)
 
 
-class TestAsyncException(TestException):
-    client_cls = AsyncClient
+if sys.version_info[0] >= 3 and sys.version_info[1] > 9:
+    class TestAsyncException(TestException):
+        client_cls = AsyncClient
 
-    def get_mock_client(self, mocker):
-        return mocker.patch("httpx.AsyncClient").return_value.__aenter__.return_value
+        def get_mock_client(self, mocker):
+            return mocker.patch("httpx.AsyncClient").return_value.__aenter__.return_value
 
-    def make_query(self):
-        async def query():
-            with pytest.raises(lima_api.LimaException) as exc_info:
-                async with self.client_cls(base_url="http://localhost/") as client:
-                    await client.async_list()
-            return exc_info
+        def make_query(self):
+            async def query():
+                with pytest.raises(lima_api.LimaException) as exc_info:
+                    async with self.client_cls(base_url="http://localhost/") as client:
+                        await client.async_list()
+                return exc_info
 
-        return asyncio.run(query())
+            return asyncio.run(query())
 
 
 class TestExceptionClass:
