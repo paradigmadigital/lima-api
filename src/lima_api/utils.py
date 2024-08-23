@@ -22,12 +22,12 @@ from pydantic.fields import FieldInfo
 from .config import PYDANTIC_V2, settings
 from .parameters import LimaParameter, Location, QueryParameter
 
-if PYDANTIC_V2:
+if PYDANTIC_V2:  # pragma: no cover
     from pydantic import TypeAdapter
     from pydantic.fields import PydanticUndefined
 
     parse_raw_as = None
-else:
+else:  # pragma: no cover
     from pydantic.fields import Undefined as PydanticUndefined
 
     TypeAdapter = None
