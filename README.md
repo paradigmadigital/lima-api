@@ -169,6 +169,19 @@ The functions parameters will mapping with the following criteria.
     async def get_pet(self, *, petId: str) -> Pet: ...
    ```
 
+
+## Auto-start
+
+In some case we need create a global client. In that cases maybe you don't want use `with` cause when you call some function. We create the kwarg `auto_start` that allow start and close client automatic when you call some function.
+
+> [!IMPORTANT]
+> * If you open and close the connection the performance could be affected.
+
+> [!NOTE]
+> * Synchronous clients allows use `auto_close` (as False by default to have same behavior that Asynchronous has) that allow not close the connection to improve the performance.
+> * We recommend use `with` in Asynchronous and in Synchronous mode with `auto_start=True` and `auto_close=False`.
+
+
 ## Helps for developers
 
 By default, lima-api don't log any information, whoever in some cases you need log information.
