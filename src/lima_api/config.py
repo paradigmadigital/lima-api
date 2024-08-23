@@ -2,9 +2,9 @@ from pydantic.version import VERSION
 
 PYDANTIC_V2 = VERSION.startswith("2.")
 
-if PYDANTIC_V2:
+if PYDANTIC_V2:  # pragma: no cover
     from pydantic_settings import BaseSettings
-else:
+else:  # pragma: no cover
     from pydantic import BaseSettings
 
 

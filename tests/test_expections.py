@@ -8,11 +8,9 @@ import pytest
 from client import (
     AsyncClient,
     SyncClient,
-    UnexpectedError,
 )
 
 import lima_api
-from lima_api import LimaException
 
 
 class CustomModel(pydantic.BaseModel):
@@ -58,7 +56,8 @@ class TestException:
 
         exc_info = self.make_query()
 
-        assert exc_info.value.detail == "Connection error http://localhost/ - <class 'httpx.HTTPError'> - Internal Server Error"
+        err_msg = "Connection error http://localhost/ - <class 'httpx.HTTPError'> - Internal Server Error"
+        assert exc_info.value.detail == err_msg
         assert isinstance(exc_info.value.__cause__, httpx.HTTPError)
 
     def test_http_error_with_request(self, mocker):
@@ -69,7 +68,8 @@ class TestException:
 
         exc_info = self.make_query()
 
-        assert exc_info.value.detail == "Connection error http://fakeurl - <class 'httpx.HTTPError'> - Internal Server Error"
+        err_msg = "Connection error http://fakeurl - <class 'httpx.HTTPError'> - Internal Server Error"
+        assert exc_info.value.detail == err_msg
         assert isinstance(exc_info.value.__cause__, httpx.HTTPError)
 
 
