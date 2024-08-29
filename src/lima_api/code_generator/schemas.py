@@ -3,10 +3,10 @@ from typing import Any, Optional
 
 from lima_api.code_generator.templates import BASE_CLASS
 from lima_api.code_generator.utils import (
-    snake_to_camel,
-    camel_to_snake,
     OPENAPI_2_TYPE_MAPPING,
     OpenApiType,
+    camel_to_snake,
+    snake_to_camel,
 )
 
 
@@ -46,7 +46,7 @@ class PropertyParser:
         self.is_required: bool = is_required
         self._str: str = ""
         self.enum: Optional[EnumObject] = None
-        self.embed_cls: Optional["SchemaObject"] = None
+        self.embed_cls: Optional[SchemaObject] = None
 
     def _get_final_type(self, obj):
         def_type = None
@@ -81,7 +81,7 @@ class PropertyParser:
                                 any_of.append(item_type)
                             else:
                                 raise NotImplementedError(f"Unsupported type {item.get('type')}")
-                        item_type = ', '.join(any_of)
+                        item_type = ", ".join(any_of)
                         if def_type == "list":
                             is_list = True
                         def_type = "typing.Union"
@@ -162,8 +162,10 @@ class SchemaObject:
             if parser.embed_cls is not None:
                 self.embed_cls.append(parser.embed_cls)
             self.attributes += f"\n    {parser}"
-        self._str = '\n'.join([str(enum) for enum in self.enums])
-        self._str = '\n'.join([str(cls) for cls in self.embed_cls])
+        self._str += "".join([str(enum) for enum in self.enums])
+        self._str += "\n\n".join([str(cls) for cls in self.embed_cls])
+        if self.embed_cls:
+            self._str += "\n"
         self._str += BASE_CLASS.substitute(
             model_class_name=self.name,
             model_class_parent="pydantic.BaseModel",
@@ -174,7 +176,7 @@ class SchemaObject:
     def set_as_alias(self, alias_type: str) -> None:
         self.type = SchemaObjectType.ALIAS
         self.name = snake_to_camel(self.name)
-        self._str = f"{self.name}: typing.TypeAlias = {alias_type}"
+        self._str = f"\n{self.name}: typing.TypeAlias = {alias_type}\n"
 
     def set_as_array(self, array_type: str, required=False) -> None:
         self.type = SchemaObjectType.ARRAY
