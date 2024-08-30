@@ -152,10 +152,7 @@ class LimaFunction:
                         else:
                             # TODO generate model on fly
                             options.add("dict")
-                    if len(options) > 1:
-                        returned_type = f"typing.Union[{', '.join(options)}]"
-                    else:
-                        returned_type = options.pop()
+                    returned_type = f"typing.Union[{', '.join(options)}]" if len(options) > 1 else options.pop()
                 elif schema.get("type") in OPENAPI_2_TYPE_MAPPING:
                     returned_type = OPENAPI_2_TYPE_MAPPING[schema.get("type")]
                 else:
@@ -179,12 +176,12 @@ class LimaFunction:
     @property
     def default_response_code(self) -> int:
         if not self._default_status:
-            codes = [int(status) for status in self._responses.keys() if status.isnumeric()]
+            codes = [int(status) for status in self._responses if status.isnumeric()]
             self._default_status = 200
             if len(codes) == 1:
                 self._default_status = codes[0]
             elif codes:
-                if "default" in self._responses.keys():
+                if "default" in self._responses:
                     self._default_status = 200
                 if 200 not in codes:
                     for status in sorted(codes):
@@ -198,7 +195,7 @@ class LimaFunction:
     @property
     def response_mapping(self) -> dict[int, LimaExceptionGenerator]:
         mapping = {}
-        for status in self._responses.keys():
+        for status in self._responses:
             if status == "default":
                 continue
             int_status = int(status)

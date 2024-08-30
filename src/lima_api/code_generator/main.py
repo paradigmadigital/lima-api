@@ -57,6 +57,7 @@ def gen_from_file(file_path):
     generator.parse()
     client_content: str = str(generator)
     with open(os.path.join(base_dir, "client.py"), "w") as f:
+        f.write(f"#\n# Client auto generated for {api_title}\n#\n")
         add_enter = False
         if "typing" in model_content:
             f.write("import typing\n")
@@ -66,6 +67,7 @@ def gen_from_file(file_path):
             add_enter = True
         if add_enter:
             f.write("\n")
+        f.write(f"client = Client(base_url={server})\n")
 
         f.write("import lima_api\n")
         if "pydantic" in client_content:
