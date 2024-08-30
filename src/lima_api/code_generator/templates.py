@@ -7,7 +7,7 @@ ${class_methods}
 """)
 
 LIMA_FUNCTION = Template("""
-    @lima_api.get(
+    @lima_api.${method}(
         path="${path}",
         default_response_code=${default_response_code},
         response_mapping=${response_mapping},

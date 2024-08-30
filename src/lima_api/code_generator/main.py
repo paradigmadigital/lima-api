@@ -3,6 +3,7 @@ import json
 import os
 from io import StringIO
 
+from lima_api.code_generator.cli_gen import ClientGenerator
 from lima_api.code_generator.schemas import SchemaParser
 from lima_api.code_generator.utils import camel_to_snake
 
@@ -34,7 +35,9 @@ def gen_from_file(file_path):
     schema_parse.print(file=model_content)
     model_content.seek(0)
     model_content: str = model_content.read()
+    has_model = False
     if "pydantic" in model_content:
+        has_model = True
         with open(os.path.join(base_dir, "models.py"), "w") as f:
             add_enter = False
             if "typing" in model_content:
@@ -50,13 +53,27 @@ def gen_from_file(file_path):
             f.write(model_content)
 
     paths = openapi_content.get("paths", {})
-    for path, path_data in paths.items():
-        for method, method_data in path_data.items():
-            #print(method_data)
-            for param in method_data.get("parameters", []):
-                ...
-            for status, data in method_data.get("responses", {}).items():
-                ...
+    generator = ClientGenerator(schema_parse, paths)
+    generator.parse()
+    client_content: str = str(generator)
+    with open(os.path.join(base_dir, "client.py"), "w") as f:
+        add_enter = False
+        if "typing" in model_content:
+            f.write("import typing\n")
+            add_enter = True
+        if "Enum" in model_content:
+            f.write("from enum import Enum\n")
+            add_enter = True
+        if add_enter:
+            f.write("\n")
+
+        f.write("import lima_api\n")
+        if "pydantic" in client_content:
+            f.write("import pydantic\n")
+        f.write("\n")
+        if has_model:
+            f.write("from .models import *\n\n")
+        f.write(client_content)
 
 
 def main():
@@ -67,4 +84,31 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    CURRENT_DIR = os.path.dirname(__file__)
+    DEFAULT_FILE = os.path.join(CURRENT_DIR, "../../../tests/resources/satellite-passes_openapi.json")
+    DEFAULT_FILE = os.path.join(CURRENT_DIR, "../../../tests/resources/calculadora_openapi.json")
+    # gen_from_file(DEFAULT_FILE)
+
+    EXAMPLE_DIR = os.path.join(CURRENT_DIR, "../../../tests/resources/examples/")
+    import glob
+    import os
+    os.chdir(EXAMPLE_DIR)
+
+    '''
+    for f in glob.glob("../*.json"):
+        print(f)
+        gen_from_file(f)
+        print("\n\n")
+    #'''
+
+    for f in glob.glob("*/*.json"):
+        '''
+        if f != "v3.0/callback-example.json":
+            continue
+        #'''
+        print(f)
+        gen_from_file(f)
+        print("\n\n")
+        # break
+
+    # main()

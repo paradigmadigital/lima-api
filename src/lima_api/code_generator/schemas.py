@@ -146,6 +146,12 @@ class SchemaObject:
     def __str__(self):
         return self._str
 
+    def __hash__(self):
+        return hash(str(self))
+
+    def __eq__(self, other):
+        return str(self) == str(other)
+
     def set_as_object(self, properties: dict, required: Optional[list] = None) -> None:
         self.type = SchemaObjectType.OBJECT
         self.name = snake_to_camel(self.name)
