@@ -159,7 +159,6 @@ class LimaFunction:
                 elif schema.get("type") in OPENAPI_2_TYPE_MAPPING:
                     returned_type = OPENAPI_2_TYPE_MAPPING[schema.get("type")]
                 else:
-
                     candidate = self.client_generator.process_schema("", schema)
                     if candidate.name:
                         returned_type = candidate.name

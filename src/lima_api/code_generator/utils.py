@@ -31,7 +31,4 @@ def snake_to_camel(snake_str: str) -> str:
     if not snake_str:
         return ""
     _str = snake_str.replace("-", "_").replace(" ", "_").replace(".", "")
-    return "".join(
-        x if START_WITH_UPPER.match(x) else x[0].upper() + x[1:] if x else ""
-        for x in _str.split("_")
-    )
+    return "".join(x if START_WITH_UPPER.match(x) else x[0].upper() + x[1:] if x else "" for x in _str.split("_"))
