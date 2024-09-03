@@ -29,12 +29,9 @@ def gen_from_file(file_path):
     if servers and isinstance(servers, (list, tuple)):
         server = servers[0].get("url")
         if servers[0].get("variables", {}):
-            vars = {
-                key: value.get("default")
-                for key, value in servers[0]["variables"].items()
-            }
+            vars = {key: value.get("default") for key, value in servers[0]["variables"].items()}
             for key, value in vars.items():
-                server = server.replace("{"+key+"}", value)
+                server = server.replace("{" + key + "}", value)
     elif servers:
         server = servers
 

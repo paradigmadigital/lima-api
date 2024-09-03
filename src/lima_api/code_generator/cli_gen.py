@@ -233,7 +233,7 @@ class LimaFunction:
                 numbers = STAR_WITH_NUMBER.match(exception_name)
                 if numbers:
                     number = numbers.group()
-                    exception_name = exception_name[len(number):] + number
+                    exception_name = exception_name[len(number) :] + number
 
                 low_ex = exception_name.lower()
                 if not any(word in low_ex for word in ["error", "invalid", "exception"]):
