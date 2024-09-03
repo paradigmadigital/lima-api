@@ -1,0 +1,3227 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Api Calculadora Simple",
+    "summary": "Api de Calculadora simple desarrollada con FastApi 🚀",
+    "description": "\n## ⚓ Listado de Funcionalidades\n### 🤓 Cálculo Básico\n- Sumar\n- Restar\n- Multiplicar\n- Dividir\n- Módulo\n- Raíz n-ésima \n- Potenciación\n- Logaritmo\n\n### 🤖 Conversión\n- Ángulo\n- Área\n- Datos\n- Longitud\n- Masa\n- Velocidad\n- Sistema Numérico (BIN, DEC, HEX, OCT)\n- Temperatura\n- Tiempo\n- Volumen\n- Divisas (+160 divisas en tiempo real la tasa de cambio)\n\n### 💥 Trigonometría\n- Seno\n- Coseno\n- Tangente\n- Cotangente\n- Secante\n- Cosecante\n\n### 🎓 Calculadora\n- Evaluación y Cálculo de expresiones\n- Descuento\n- IMC\n\n### 📈 Estadística\n- Media\n- Mediana\n- Multi-Moda\n- Desviación Estándar de la población\n- Desviación Estándar de la muestra\n- Varianza de la población\n- Varianza de la muestra\n- Correlación\n- Covarianza\n\n### 🎈 Otros\n- Constantes\n",
+    "contact": {
+      "name": "Eduardo González",
+      "url": "https://github.com/EduardoProfe666",
+      "email": "eduardoglez64377@gmail.com"
+    },
+    "license": {
+      "name": "MIT License",
+      "url": "https://opensource.org/license/mit/"
+    },
+    "version": "1.0.2"
+  },
+  "paths": {
+    "/calculo-basico/sumar/": {
+      "get": {
+        "tags": [
+          "Cálculo Básico"
+        ],
+        "summary": "Permite sumar 2 números (num1 + num2)",
+        "operationId": "sumar_calculo_basico_sumar__get",
+        "parameters": [
+          {
+            "name": "num1",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "title": "Num1"
+            }
+          },
+          {
+            "name": "num2",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "title": "Num2"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultadoFloat"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/calculo-basico/restar/": {
+      "get": {
+        "tags": [
+          "Cálculo Básico"
+        ],
+        "summary": "Permite restar 2 números (num1 - num2)",
+        "operationId": "restar_calculo_basico_restar__get",
+        "parameters": [
+          {
+            "name": "num1",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "title": "Num1"
+            }
+          },
+          {
+            "name": "num2",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "title": "Num2"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultadoFloat"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/calculo-basico/multiplicar/": {
+      "get": {
+        "tags": [
+          "Cálculo Básico"
+        ],
+        "summary": "Permite multiplicar 2 números (num1 * num2)",
+        "operationId": "multiplicar_calculo_basico_multiplicar__get",
+        "parameters": [
+          {
+            "name": "num1",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "title": "Num1"
+            }
+          },
+          {
+            "name": "num2",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "title": "Num2"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultadoFloat"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/calculo-basico/dividir/": {
+      "get": {
+        "tags": [
+          "Cálculo Básico"
+        ],
+        "summary": "Permite dividir 2 números (num1 / num2)",
+        "operationId": "dividir_calculo_basico_dividir__get",
+        "parameters": [
+          {
+            "name": "num1",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "title": "Num1"
+            }
+          },
+          {
+            "name": "num2",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "title": "Num2"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultadoFloat"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/calculo-basico/modulo/": {
+      "get": {
+        "tags": [
+          "Cálculo Básico"
+        ],
+        "summary": "Permite calcular el módulo dados 2 números (num1 % num2)",
+        "operationId": "modulo_calculo_basico_modulo__get",
+        "parameters": [
+          {
+            "name": "num1",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "title": "Num1"
+            }
+          },
+          {
+            "name": "num2",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "title": "Num2"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultadoFloat"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/calculo-basico/raiz/": {
+      "get": {
+        "tags": [
+          "Cálculo Básico"
+        ],
+        "summary": "Permite calcular la raíz n-ésima de un número (radicando ^ 1/radical)",
+        "operationId": "raiz_calculo_basico_raiz__get",
+        "parameters": [
+          {
+            "name": "radicando",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "title": "Radicando"
+            }
+          },
+          {
+            "name": "radical",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "title": "Radical"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultadoFloat"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/calculo-basico/potenciacion/": {
+      "get": {
+        "tags": [
+          "Cálculo Básico"
+        ],
+        "summary": "Permite calcular la potenciación n-ésima de un número (base ^ exponente)",
+        "operationId": "potenciacion_calculo_basico_potenciacion__get",
+        "parameters": [
+          {
+            "name": "base",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "title": "Base"
+            }
+          },
+          {
+            "name": "exponente",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "title": "Exponente"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultadoFloat"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/calculo-basico/logaritmo/": {
+      "get": {
+        "tags": [
+          "Cálculo Básico"
+        ],
+        "summary": "Permite calcular el logaritmo n-ésimo de un número (logbase argumento)",
+        "operationId": "logaritmo_calculo_basico_logaritmo__get",
+        "parameters": [
+          {
+            "name": "base",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "title": "Base"
+            }
+          },
+          {
+            "name": "argumento",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "title": "Argumento"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultadoFloat"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/calculo-basico/logaritmo-natural/": {
+      "get": {
+        "tags": [
+          "Cálculo Básico"
+        ],
+        "summary": "Permite calcular el logaritmo natural de un número (lg argumento)",
+        "operationId": "logaritmo_natural_calculo_basico_logaritmo_natural__get",
+        "parameters": [
+          {
+            "name": "argumento",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "title": "Argumento"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultadoFloat"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/calculadora/calcular": {
+      "post": {
+        "tags": [
+          "Calculadora"
+        ],
+        "summary": "Permite calcular la expresión matemática simple dada (sin funciones trigonométricas)",
+        "operationId": "calcular_calculadora_calcular_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Expresion"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultadoFloat"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/calculadora/descuento/": {
+      "post": {
+        "tags": [
+          "Calculadora"
+        ],
+        "summary": "Permite calcular el descuento dado el precio original y el porcentaje de descuento.",
+        "operationId": "descuento_calculadora_descuento__post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DatosDescuentoInicio"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DatosDescuentoFinal"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/calculadora/imc/": {
+      "post": {
+        "tags": [
+          "Calculadora"
+        ],
+        "summary": "Permite calcular el índice de masa corporal de una persona dados su peso y altura.",
+        "operationId": "imc_calculadora_imc__post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IMCDatos"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IMCRespuesta"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/trigonometria/seno/{num}": {
+      "get": {
+        "tags": [
+          "Trigonometría"
+        ],
+        "summary": "Permite calcular el seno de un número (sen(num))",
+        "operationId": "seno_trigonometria_seno__num__get",
+        "parameters": [
+          {
+            "name": "num",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "title": "Num"
+            }
+          },
+          {
+            "name": "es_radian",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": true,
+              "title": "Es Radian"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultadoFloat"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/trigonometria/coseno/{num}": {
+      "get": {
+        "tags": [
+          "Trigonometría"
+        ],
+        "summary": "Permite calcular el coseno de un número (cos(num))",
+        "operationId": "coseno_trigonometria_coseno__num__get",
+        "parameters": [
+          {
+            "name": "num",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "title": "Num"
+            }
+          },
+          {
+            "name": "es_radian",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": true,
+              "title": "Es Radian"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultadoFloat"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/trigonometria/tangente/{num}": {
+      "get": {
+        "tags": [
+          "Trigonometría"
+        ],
+        "summary": "Permite calcular la tangente de un número (tan(num))",
+        "operationId": "tangente_trigonometria_tangente__num__get",
+        "parameters": [
+          {
+            "name": "num",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "title": "Num"
+            }
+          },
+          {
+            "name": "es_radian",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": true,
+              "title": "Es Radian"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultadoFloat"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/trigonometria/cotangente/{num}": {
+      "get": {
+        "tags": [
+          "Trigonometría"
+        ],
+        "summary": "Permite calcular la cotangente de un número (cot(num))",
+        "operationId": "cotangente_trigonometria_cotangente__num__get",
+        "parameters": [
+          {
+            "name": "num",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "title": "Num"
+            }
+          },
+          {
+            "name": "es_radian",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": true,
+              "title": "Es Radian"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultadoFloat"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/trigonometria/secante/{num}": {
+      "get": {
+        "tags": [
+          "Trigonometría"
+        ],
+        "summary": "Permite calcular la secante de un número (sec(num))",
+        "operationId": "secante_trigonometria_secante__num__get",
+        "parameters": [
+          {
+            "name": "num",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "title": "Num"
+            }
+          },
+          {
+            "name": "es_radian",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": true,
+              "title": "Es Radian"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultadoFloat"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/trigonometria/cosecante/{num}": {
+      "get": {
+        "tags": [
+          "Trigonometría"
+        ],
+        "summary": "Permite calcular la cosecante de un número (csc(num))",
+        "operationId": "cosecante_trigonometria_cosecante__num__get",
+        "parameters": [
+          {
+            "name": "num",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "title": "Num"
+            }
+          },
+          {
+            "name": "es_radian",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": true,
+              "title": "Es Radian"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultadoFloat"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/conversion/area/": {
+      "get": {
+        "tags": [
+          "Conversión"
+        ],
+        "summary": "Permite la conversión en unidades de área",
+        "operationId": "area_conversion_area__get",
+        "parameters": [
+          {
+            "name": "num",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "title": "Num"
+            }
+          },
+          {
+            "name": "unidad1",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "enum": [
+                "km2",
+                "ha",
+                "are",
+                "m2",
+                "dm2",
+                "cm2",
+                "mm2",
+                "micrometro2",
+                "acre",
+                "milla2",
+                "yd2",
+                "ft2",
+                "in2",
+                "rd2",
+                "qing",
+                "chi2",
+                "cun2",
+                "gongli2"
+              ],
+              "type": "string",
+              "title": "Unidad1"
+            }
+          },
+          {
+            "name": "unidad2",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "enum": [
+                "km2",
+                "ha",
+                "are",
+                "m2",
+                "dm2",
+                "cm2",
+                "mm2",
+                "micrometro2",
+                "acre",
+                "milla2",
+                "yd2",
+                "ft2",
+                "in2",
+                "rd2",
+                "qing",
+                "chi2",
+                "cun2",
+                "gongli2"
+              ],
+              "type": "string",
+              "title": "Unidad2"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultadoFloat"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/conversion/datos/": {
+      "get": {
+        "tags": [
+          "Conversión"
+        ],
+        "summary": "Permite la conversión en unidades de datos. Nota: 1 KB = 1024 B",
+        "operationId": "datos_conversion_datos__get",
+        "parameters": [
+          {
+            "name": "num",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "title": "Num"
+            }
+          },
+          {
+            "name": "unidad1",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "enum": [
+                "B",
+                "KB",
+                "MB",
+                "GB",
+                "TB",
+                "PB"
+              ],
+              "type": "string",
+              "title": "Unidad1"
+            }
+          },
+          {
+            "name": "unidad2",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "enum": [
+                "B",
+                "KB",
+                "MB",
+                "GB",
+                "TB",
+                "PB"
+              ],
+              "type": "string",
+              "title": "Unidad2"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultadoFloat"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/conversion/longitud/": {
+      "get": {
+        "tags": [
+          "Conversión"
+        ],
+        "summary": "Permite la conversión en unidades de longitud.",
+        "operationId": "longitud_conversion_longitud__get",
+        "parameters": [
+          {
+            "name": "num",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "title": "Num"
+            }
+          },
+          {
+            "name": "unidad1",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "enum": [
+                "km",
+                "m",
+                "dm",
+                "cm",
+                "mm",
+                "micrometro",
+                "nanometro",
+                "picometro",
+                "nmi",
+                "mi",
+                "fur",
+                "ftm",
+                "yd",
+                "ft",
+                "in",
+                "gongli",
+                "li",
+                "chi",
+                "cun",
+                "fen",
+                "lii",
+                "parsec",
+                "distancia-lunar",
+                "unidad-astronomica",
+                "anno-luz"
+              ],
+              "type": "string",
+              "title": "Unidad1"
+            }
+          },
+          {
+            "name": "unidad2",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "enum": [
+                "km",
+                "m",
+                "dm",
+                "cm",
+                "mm",
+                "micrometro",
+                "nanometro",
+                "picometro",
+                "nmi",
+                "mi",
+                "fur",
+                "ftm",
+                "yd",
+                "ft",
+                "in",
+                "gongli",
+                "li",
+                "chi",
+                "cun",
+                "fen",
+                "lii",
+                "parsec",
+                "distancia-lunar",
+                "unidad-astronomica",
+                "anno-luz"
+              ],
+              "type": "string",
+              "title": "Unidad2"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultadoFloat"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/conversion/masa/": {
+      "get": {
+        "tags": [
+          "Conversión"
+        ],
+        "summary": "Permite la conversión en unidades de masa.",
+        "operationId": "masa_conversion_masa__get",
+        "parameters": [
+          {
+            "name": "num",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "title": "Num"
+            }
+          },
+          {
+            "name": "unidad1",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "enum": [
+                "t",
+                "kg",
+                "g",
+                "mg",
+                "microgramo",
+                "quintal",
+                "lb",
+                "oz",
+                "carat",
+                "grano"
+              ],
+              "type": "string",
+              "title": "Unidad1"
+            }
+          },
+          {
+            "name": "unidad2",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "enum": [
+                "t",
+                "kg",
+                "g",
+                "mg",
+                "microgramo",
+                "quintal",
+                "lb",
+                "oz",
+                "carat",
+                "grano"
+              ],
+              "type": "string",
+              "title": "Unidad2"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultadoFloat"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/conversion/velocidad/": {
+      "get": {
+        "tags": [
+          "Conversión"
+        ],
+        "summary": "Permite la conversión en unidades de velocidad.",
+        "operationId": "velocidad_conversion_velocidad__get",
+        "parameters": [
+          {
+            "name": "num",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "title": "Num"
+            }
+          },
+          {
+            "name": "unidad1",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "enum": [
+                "c",
+                "Ma",
+                "m-s",
+                "km-h",
+                "km-s",
+                "kn",
+                "mph",
+                "fps",
+                "ips"
+              ],
+              "type": "string",
+              "title": "Unidad1"
+            }
+          },
+          {
+            "name": "unidad2",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "enum": [
+                "c",
+                "Ma",
+                "m-s",
+                "km-h",
+                "km-s",
+                "kn",
+                "mph",
+                "fps",
+                "ips"
+              ],
+              "type": "string",
+              "title": "Unidad2"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultadoFloat"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/conversion/temperatura/": {
+      "get": {
+        "tags": [
+          "Conversión"
+        ],
+        "summary": "Permite la conversión en unidades de temperatura.",
+        "operationId": "temperatura_conversion_temperatura__get",
+        "parameters": [
+          {
+            "name": "num",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "title": "Num"
+            }
+          },
+          {
+            "name": "unidad1",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "enum": [
+                "celsius",
+                "fahrenheit",
+                "kelvin",
+                "rankine",
+                "reaumur"
+              ],
+              "type": "string",
+              "title": "Unidad1"
+            }
+          },
+          {
+            "name": "unidad2",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "enum": [
+                "celsius",
+                "fahrenheit",
+                "kelvin",
+                "rankine",
+                "reaumur"
+              ],
+              "type": "string",
+              "title": "Unidad2"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultadoFloat"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/conversion/tiempo/": {
+      "get": {
+        "tags": [
+          "Conversión"
+        ],
+        "summary": "Permite la conversión en unidades de tiempo.",
+        "operationId": "tiempo_conversion_tiempo__get",
+        "parameters": [
+          {
+            "name": "num",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "title": "Num"
+            }
+          },
+          {
+            "name": "unidad1",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "enum": [
+                "anno",
+                "semana",
+                "dia",
+                "hora",
+                "minuto",
+                "segundo",
+                "milisegundo",
+                "microsegundo",
+                "picosegundo"
+              ],
+              "type": "string",
+              "title": "Unidad1"
+            }
+          },
+          {
+            "name": "unidad2",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "enum": [
+                "anno",
+                "semana",
+                "dia",
+                "hora",
+                "minuto",
+                "segundo",
+                "milisegundo",
+                "microsegundo",
+                "picosegundo"
+              ],
+              "type": "string",
+              "title": "Unidad2"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultadoFloat"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/conversion/volumen/": {
+      "get": {
+        "tags": [
+          "Conversión"
+        ],
+        "summary": "Permite la conversión en unidades de volumen.",
+        "operationId": "volumen_conversion_volumen__get",
+        "parameters": [
+          {
+            "name": "num",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "title": "Num"
+            }
+          },
+          {
+            "name": "unidad1",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "enum": [
+                "m3",
+                "dm3",
+                "cm3",
+                "mm3",
+                "hl",
+                "l",
+                "dl",
+                "cl",
+                "ml",
+                "ft3",
+                "in3",
+                "yd3",
+                "af3"
+              ],
+              "type": "string",
+              "title": "Unidad1"
+            }
+          },
+          {
+            "name": "unidad2",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "enum": [
+                "m3",
+                "dm3",
+                "cm3",
+                "mm3",
+                "hl",
+                "l",
+                "dl",
+                "cl",
+                "ml",
+                "ft3",
+                "in3",
+                "yd3",
+                "af3"
+              ],
+              "type": "string",
+              "title": "Unidad2"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultadoFloat"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/conversion/angulo/": {
+      "get": {
+        "tags": [
+          "Conversión"
+        ],
+        "summary": "Permite la conversión de unidades de ángulo (radianes-grados). Nota: Si la unidad de destino es radianes, se asume que la unidad inicial es grados, y viceversa.",
+        "operationId": "angulo_conversion_angulo__get",
+        "parameters": [
+          {
+            "name": "num",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "title": "Num"
+            }
+          },
+          {
+            "name": "unidad_destino",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "enum": [
+                "radianes",
+                "grados"
+              ],
+              "type": "string",
+              "title": "Unidad Destino"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultadoFloat"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/conversion/sistema-numerico/": {
+      "get": {
+        "tags": [
+          "Conversión"
+        ],
+        "summary": "Permite la conversión de sistema numérico. No admite números fraccionarios.",
+        "operationId": "sistema_numerico_conversion_sistema_numerico__get",
+        "parameters": [
+          {
+            "name": "num",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Num"
+            }
+          },
+          {
+            "name": "unidad1",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "enum": [
+                "BIN",
+                "OCT",
+                "DEC",
+                "HEX"
+              ],
+              "type": "string",
+              "title": "Unidad1"
+            }
+          },
+          {
+            "name": "unidad2",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "enum": [
+                "BIN",
+                "OCT",
+                "DEC",
+                "HEX"
+              ],
+              "type": "string",
+              "title": "Unidad2"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultadoStr"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/conversion/divisas/": {
+      "get": {
+        "tags": [
+          "Conversión"
+        ],
+        "summary": "Permite la conversión de las divisas según la tasa de cambio en tiempo real.",
+        "operationId": "divisas_conversion_divisas__get",
+        "parameters": [
+          {
+            "name": "num",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "title": "Num"
+            }
+          },
+          {
+            "name": "unidad1",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "enum": [
+                "AED",
+                "AFN",
+                "ALL",
+                "AMD",
+                "ANG",
+                "AOA",
+                "ARS",
+                "AUD",
+                "AWG",
+                "AZN",
+                "BAM",
+                "BBD",
+                "BDT",
+                "BGN",
+                "BHD",
+                "BIF",
+                "BMD",
+                "BND",
+                "BOB",
+                "BRL",
+                "BSD",
+                "BTN",
+                "BWP",
+                "BYN",
+                "BZD",
+                "CAD",
+                "CDF",
+                "CHF",
+                "CLP",
+                "CNY",
+                "COP",
+                "CRC",
+                "CUC",
+                "CUP",
+                "CVE",
+                "CZK",
+                "DJF",
+                "DKK",
+                "DOP",
+                "DZD",
+                "EGP",
+                "ERN",
+                "ETB",
+                "EUR",
+                "FJD",
+                "FKP",
+                "GBP",
+                "GEL",
+                "GGP",
+                "GHS",
+                "GIP",
+                "GMD",
+                "GNF",
+                "GTQ",
+                "GYD",
+                "HKD",
+                "HNL",
+                "HRK",
+                "HTG",
+                "HUF",
+                "IDR",
+                "ILS",
+                "IMP",
+                "INR",
+                "IQD",
+                "IRR",
+                "ISK",
+                "JEP",
+                "JMD",
+                "JOD",
+                "JPY",
+                "KES",
+                "KGS",
+                "KHR",
+                "KMF",
+                "KRW",
+                "KWD",
+                "KYD",
+                "KZT",
+                "LAK",
+                "LBP",
+                "LKR",
+                "LRD",
+                "LSL",
+                "LYD",
+                "MAD",
+                "MDL",
+                "MGA",
+                "MKD",
+                "MMK",
+                "MNT",
+                "MOP",
+                "MRU",
+                "MUR",
+                "MVR",
+                "MWK",
+                "MXN",
+                "MYR",
+                "MZN",
+                "NAD",
+                "NGN",
+                "NIO",
+                "NOK",
+                "NPR",
+                "NZD",
+                "OMR",
+                "PAB",
+                "PEN",
+                "PGK",
+                "PHP",
+                "PKR",
+                "PLN",
+                "PYG",
+                "QAR",
+                "RON",
+                "RSD",
+                "RUB",
+                "RWF",
+                "SAR",
+                "SBD",
+                "SCR",
+                "SDG",
+                "SEK",
+                "SGD",
+                "SHP",
+                "SLL",
+                "SOS",
+                "SRD",
+                "SSP",
+                "STN",
+                "SVC",
+                "SYP",
+                "SZL",
+                "THB",
+                "TJS",
+                "TMT",
+                "TND",
+                "TOP",
+                "TRY",
+                "TTD",
+                "TWD",
+                "TZS",
+                "UAH",
+                "UGX",
+                "USD",
+                "USDC",
+                "USDT",
+                "UYU",
+                "UZS",
+                "VES",
+                "VND",
+                "VUV",
+                "WST",
+                "XAF",
+                "XAG",
+                "XAU",
+                "XCD",
+                "XDR",
+                "XOF",
+                "XPF",
+                "YER",
+                "ZAR",
+                "ZMW",
+                "ZWL"
+              ],
+              "type": "string",
+              "title": "Unidad1"
+            }
+          },
+          {
+            "name": "unidad2",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "enum": [
+                "AED",
+                "AFN",
+                "ALL",
+                "AMD",
+                "ANG",
+                "AOA",
+                "ARS",
+                "AUD",
+                "AWG",
+                "AZN",
+                "BAM",
+                "BBD",
+                "BDT",
+                "BGN",
+                "BHD",
+                "BIF",
+                "BMD",
+                "BND",
+                "BOB",
+                "BRL",
+                "BSD",
+                "BTN",
+                "BWP",
+                "BYN",
+                "BZD",
+                "CAD",
+                "CDF",
+                "CHF",
+                "CLP",
+                "CNY",
+                "COP",
+                "CRC",
+                "CUC",
+                "CUP",
+                "CVE",
+                "CZK",
+                "DJF",
+                "DKK",
+                "DOP",
+                "DZD",
+                "EGP",
+                "ERN",
+                "ETB",
+                "EUR",
+                "FJD",
+                "FKP",
+                "GBP",
+                "GEL",
+                "GGP",
+                "GHS",
+                "GIP",
+                "GMD",
+                "GNF",
+                "GTQ",
+                "GYD",
+                "HKD",
+                "HNL",
+                "HRK",
+                "HTG",
+                "HUF",
+                "IDR",
+                "ILS",
+                "IMP",
+                "INR",
+                "IQD",
+                "IRR",
+                "ISK",
+                "JEP",
+                "JMD",
+                "JOD",
+                "JPY",
+                "KES",
+                "KGS",
+                "KHR",
+                "KMF",
+                "KRW",
+                "KWD",
+                "KYD",
+                "KZT",
+                "LAK",
+                "LBP",
+                "LKR",
+                "LRD",
+                "LSL",
+                "LYD",
+                "MAD",
+                "MDL",
+                "MGA",
+                "MKD",
+                "MMK",
+                "MNT",
+                "MOP",
+                "MRU",
+                "MUR",
+                "MVR",
+                "MWK",
+                "MXN",
+                "MYR",
+                "MZN",
+                "NAD",
+                "NGN",
+                "NIO",
+                "NOK",
+                "NPR",
+                "NZD",
+                "OMR",
+                "PAB",
+                "PEN",
+                "PGK",
+                "PHP",
+                "PKR",
+                "PLN",
+                "PYG",
+                "QAR",
+                "RON",
+                "RSD",
+                "RUB",
+                "RWF",
+                "SAR",
+                "SBD",
+                "SCR",
+                "SDG",
+                "SEK",
+                "SGD",
+                "SHP",
+                "SLL",
+                "SOS",
+                "SRD",
+                "SSP",
+                "STN",
+                "SVC",
+                "SYP",
+                "SZL",
+                "THB",
+                "TJS",
+                "TMT",
+                "TND",
+                "TOP",
+                "TRY",
+                "TTD",
+                "TWD",
+                "TZS",
+                "UAH",
+                "UGX",
+                "USD",
+                "USDC",
+                "USDT",
+                "UYU",
+                "UZS",
+                "VES",
+                "VND",
+                "VUV",
+                "WST",
+                "XAF",
+                "XAG",
+                "XAU",
+                "XCD",
+                "XDR",
+                "XOF",
+                "XPF",
+                "YER",
+                "ZAR",
+                "ZMW",
+                "ZWL"
+              ],
+              "type": "string",
+              "title": "Unidad2"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultadoFloat"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/estadisticas/media/": {
+      "post": {
+        "tags": [
+          "Estadísticas"
+        ],
+        "summary": "Permite determinar la media de un conjunto de elementos",
+        "operationId": "media_estadisticas_media__post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EstadisticaDato"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultadoFloat"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/estadisticas/mediana/": {
+      "post": {
+        "tags": [
+          "Estadísticas"
+        ],
+        "summary": "Permite determinar la mediana de un conjunto de elementos",
+        "operationId": "mediana_estadisticas_mediana__post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EstadisticaDato"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultadoFloat"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/estadisticas/moda/": {
+      "post": {
+        "tags": [
+          "Estadísticas"
+        ],
+        "summary": "Permite determinar la moda de un conjunto de elementos. Funciona también como multi-moda.",
+        "operationId": "moda_estadisticas_moda__post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EstadisticaDato"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModaResultado"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/estadisticas/desviacion-poblacion/": {
+      "post": {
+        "tags": [
+          "Estadísticas"
+        ],
+        "summary": "Permite determinar la desviación estándar de la población dada",
+        "operationId": "pdesv_estadisticas_desviacion_poblacion__post",
+        "parameters": [
+          {
+            "name": "mu",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "title": "Mu"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EstadisticaDato"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultadoFloat"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/estadisticas/varianza-poblacion/": {
+      "post": {
+        "tags": [
+          "Estadísticas"
+        ],
+        "summary": "Permite determinar la varianza de la población dada",
+        "operationId": "pvar_estadisticas_varianza_poblacion__post",
+        "parameters": [
+          {
+            "name": "mu",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "title": "Mu"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EstadisticaDato"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultadoFloat"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/estadisticas/desviacion-muestra/": {
+      "post": {
+        "tags": [
+          "Estadísticas"
+        ],
+        "summary": "Permite determinar la desviación estándar de la muestra dada",
+        "operationId": "mdesv_estadisticas_desviacion_muestra__post",
+        "parameters": [
+          {
+            "name": "xbar",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "title": "Xbar"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EstadisticaDato"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultadoFloat"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/estadisticas/varianza-muestra/": {
+      "post": {
+        "tags": [
+          "Estadísticas"
+        ],
+        "summary": "Permite determinar la varianza de la muestra dada",
+        "operationId": "mvar_estadisticas_varianza_muestra__post",
+        "parameters": [
+          {
+            "name": "xbar",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "title": "Xbar"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EstadisticaDato"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultadoFloat"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/estadisticas/correlacion/": {
+      "post": {
+        "tags": [
+          "Estadísticas"
+        ],
+        "summary": "Permite determinar el coeficiente de correlación de Pearson",
+        "operationId": "correlacion_estadisticas_correlacion__post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_correlacion_estadisticas_correlacion__post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultadoFloat"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/estadisticas/covarianza/": {
+      "post": {
+        "tags": [
+          "Estadísticas"
+        ],
+        "summary": "Permite determinar la covarianza",
+        "operationId": "covarianza_estadisticas_covarianza__post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_covarianza_estadisticas_covarianza__post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultadoFloat"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/otros/constantes/{nombre}": {
+      "get": {
+        "tags": [
+          "Otros"
+        ],
+        "summary": "Permite obtener el valor de una constante matemática",
+        "operationId": "constantes_otros_constantes__nombre__get",
+        "parameters": [
+          {
+            "name": "nombre",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "enum": [
+                "e",
+                "pi",
+                "sqrt-2",
+                "sqrt-3",
+                "sqrt-5",
+                "aureo",
+                "alfa-feigenbaum",
+                "delta-feigenbaum",
+                "artin",
+                "primos-gemelos",
+                "brun"
+              ],
+              "type": "string",
+              "title": "Nombre"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultadoFloat"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/otros/tipos": {
+      "get": {
+        "tags": [
+          "Otros"
+        ],
+        "summary": "Permite obtener todos los tipos usados en la api.",
+        "operationId": "tipos_otros_tipos_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request"
+          }
+        }
+      }
+    },
+    "/": {
+      "get": {
+        "tags": [
+          "Páginas Extras"
+        ],
+        "summary": "Root",
+        "operationId": "root__get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request"
+          }
+        }
+      }
+    },
+    "/calculadora": {
+      "get": {
+        "tags": [
+          "Páginas Extras"
+        ],
+        "summary": "Root",
+        "operationId": "root_calculadora_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request"
+          }
+        }
+      }
+    },
+    "/calculo_basico": {
+      "get": {
+        "tags": [
+          "Páginas Extras"
+        ],
+        "summary": "Root",
+        "operationId": "root_calculo_basico_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request"
+          }
+        }
+      }
+    },
+    "/conversion": {
+      "get": {
+        "tags": [
+          "Páginas Extras"
+        ],
+        "summary": "Root",
+        "operationId": "root_conversion_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request"
+          }
+        }
+      }
+    },
+    "/otros": {
+      "get": {
+        "tags": [
+          "Páginas Extras"
+        ],
+        "summary": "Root",
+        "operationId": "root_otros_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request"
+          }
+        }
+      }
+    },
+    "/trigonometria": {
+      "get": {
+        "tags": [
+          "Páginas Extras"
+        ],
+        "summary": "Root",
+        "operationId": "root_trigonometria_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request"
+          }
+        }
+      }
+    },
+    "/estadisticas": {
+      "get": {
+        "tags": [
+          "Páginas Extras"
+        ],
+        "summary": "Root",
+        "operationId": "root_estadisticas_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request"
+          }
+        }
+      }
+    },
+    "/email": {
+      "post": {
+        "tags": [
+          "Páginas Extras"
+        ],
+        "summary": "Root",
+        "operationId": "root_email_post",
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_root_email_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Body_correlacion_estadisticas_correlacion__post": {
+        "properties": {
+          "x": {
+            "$ref": "#/components/schemas/EstadisticaDato"
+          },
+          "y": {
+            "$ref": "#/components/schemas/EstadisticaDato"
+          }
+        },
+        "type": "object",
+        "required": [
+          "x",
+          "y"
+        ],
+        "title": "Body_correlacion_estadisticas_correlacion__post"
+      },
+      "Body_covarianza_estadisticas_covarianza__post": {
+        "properties": {
+          "x": {
+            "$ref": "#/components/schemas/EstadisticaDato"
+          },
+          "y": {
+            "$ref": "#/components/schemas/EstadisticaDato"
+          }
+        },
+        "type": "object",
+        "required": [
+          "x",
+          "y"
+        ],
+        "title": "Body_covarianza_estadisticas_covarianza__post"
+      },
+      "Body_root_email_post": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "email": {
+            "type": "string",
+            "title": "Email"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "email",
+          "message"
+        ],
+        "title": "Body_root_email_post"
+      },
+      "DatosDescuentoFinal": {
+        "properties": {
+          "precio_final": {
+            "type": "number",
+            "title": "Precio Final"
+          },
+          "ahorro": {
+            "type": "number",
+            "title": "Ahorro"
+          }
+        },
+        "type": "object",
+        "required": [
+          "precio_final",
+          "ahorro"
+        ],
+        "title": "DatosDescuentoFinal"
+      },
+      "DatosDescuentoInicio": {
+        "properties": {
+          "precio_original": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Precio Original"
+          },
+          "descuento_porciento": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Descuento Porciento"
+          }
+        },
+        "type": "object",
+        "required": [
+          "precio_original",
+          "descuento_porciento"
+        ],
+        "title": "DatosDescuentoInicio"
+      },
+      "EstadisticaDato": {
+        "properties": {
+          "lista": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Lista"
+          }
+        },
+        "type": "object",
+        "required": [
+          "lista"
+        ],
+        "title": "EstadisticaDato"
+      },
+      "Expresion": {
+        "properties": {
+          "expr": {
+            "type": "string",
+            "title": "Expr"
+          }
+        },
+        "type": "object",
+        "required": [
+          "expr"
+        ],
+        "title": "Expresion"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "IMCDatos": {
+        "properties": {
+          "peso": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Peso"
+          },
+          "altura": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Altura"
+          },
+          "peso_um": {
+            "type": "string",
+            "enum": [
+              "kg",
+              "lb"
+            ],
+            "title": "Peso Um"
+          },
+          "altura_um": {
+            "type": "string",
+            "enum": [
+              "cm",
+              "m",
+              "ft",
+              "in"
+            ],
+            "title": "Altura Um"
+          }
+        },
+        "type": "object",
+        "required": [
+          "peso",
+          "altura",
+          "peso_um",
+          "altura_um"
+        ],
+        "title": "IMCDatos"
+      },
+      "IMCRespuesta": {
+        "properties": {
+          "imc": {
+            "type": "number",
+            "title": "Imc"
+          },
+          "info": {
+            "type": "string",
+            "enum": [
+              "Bajo Peso Severo",
+              "Bajo Peso",
+              "Peso Normal",
+              "Sobrepeso",
+              "Obesidad Moderada",
+              "Obesidad Severa",
+              "Obesidad Mórbida",
+              "Obesidad Mortal"
+            ],
+            "title": "Info"
+          }
+        },
+        "type": "object",
+        "required": [
+          "imc",
+          "info"
+        ],
+        "title": "IMCRespuesta"
+      },
+      "ModaResultado": {
+        "properties": {
+          "resultado": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Resultado"
+          }
+        },
+        "type": "object",
+        "required": [
+          "resultado"
+        ],
+        "title": "ModaResultado"
+      },
+      "ResultadoFloat": {
+        "properties": {
+          "resultado": {
+            "type": "number",
+            "title": "Resultado"
+          }
+        },
+        "type": "object",
+        "required": [
+          "resultado"
+        ],
+        "title": "ResultadoFloat"
+      },
+      "ResultadoStr": {
+        "properties": {
+          "resultado": {
+            "type": "string",
+            "title": "Resultado"
+          }
+        },
+        "type": "object",
+        "required": [
+          "resultado"
+        ],
+        "title": "ResultadoStr"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}
