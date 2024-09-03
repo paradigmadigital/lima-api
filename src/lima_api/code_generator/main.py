@@ -5,7 +5,6 @@ from io import StringIO
 
 from lima_api.code_generator.cli_gen import ClientGenerator
 from lima_api.code_generator.schemas import SchemaParser
-from lima_api.code_generator.utils import camel_to_snake
 
 
 def generate_models(openapi_content: dict) -> SchemaParser:
