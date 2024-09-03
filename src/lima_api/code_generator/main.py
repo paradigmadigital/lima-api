@@ -24,11 +24,20 @@ def gen_from_file(file_path):
     if not os.path.isdir(base_dir):
         os.mkdir(base_dir)
 
-    api_title = camel_to_snake(openapi_content.get("info", {}).get("title", ""))
+    api_title = openapi_content.get("info", {}).get("title", "")
     servers = openapi_content.get("servers", [])
     server = "http://localhost/"
-    if servers:
-        server = server[0]
+    if servers and isinstance(servers, (list, tuple)):
+        server = servers[0].get("url")
+        if servers[0].get("variables", {}):
+            vars = {
+                key: value.get("default")
+                for key, value in servers[0]["variables"].items()
+            }
+            for key, value in vars.items():
+                server = server.replace("{"+key+"}", value)
+    elif servers:
+        server = servers
 
     schema_parse: SchemaParser = generate_models(openapi_content)
     model_content: StringIO = StringIO()
@@ -59,23 +68,26 @@ def gen_from_file(file_path):
     with open(os.path.join(base_dir, "client.py"), "w") as f:
         f.write(f"#\n# Client auto generated for {api_title}\n#\n")
         add_enter = False
-        if "typing" in model_content:
+        if "typing" in client_content:
             f.write("import typing\n")
             add_enter = True
-        if "Enum" in model_content:
+        if "Enum" in client_content:
             f.write("from enum import Enum\n")
             add_enter = True
         if add_enter:
             f.write("\n")
-        f.write(f"client = Client(base_url={server})\n")
 
         f.write("import lima_api\n")
         if "pydantic" in client_content:
             f.write("import pydantic\n")
         f.write("\n")
         if has_model:
-            f.write("from .models import *\n\n")
+            f.write("from .models import (")
+            for model in sorted(generator.models):
+                f.write(f"\n    {model},")
+            f.write("\n)\n\n")
         f.write(client_content)
+        f.write(f'\nclient = ApiClient(base_url="{server}")\n')
 
 
 def main():

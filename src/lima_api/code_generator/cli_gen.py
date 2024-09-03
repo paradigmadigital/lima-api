@@ -62,6 +62,7 @@ class LimaFunction:
         self._str = ""
         self._exceptions: list[LimaExceptionGenerator] = []
         self._embed_cls: list[SchemaObject] = []
+        self.models = set()
 
     @property
     def name(self) -> str:
@@ -84,6 +85,16 @@ class LimaFunction:
 
         if content:
             obj = self.client_generator.process_schema("", content.get("schema"))
+            if obj.type == SchemaObjectType.UNION:
+                obj.name = str(obj)
+                self.models.update(obj.models)
+            elif obj.type == SchemaObjectType.ALIAS:
+                obj.name = obj.attributes
+                self.models.update(obj.models)
+            elif not obj.name:
+                obj.name = "dict"
+            else:
+                self.models.add(obj.name)
             params += BASE_PARAM.substitute(
                 param_name="body",
                 param_type=obj.name,
@@ -97,7 +108,12 @@ class LimaFunction:
             if param_field is None:
                 continue
 
-            param_type = OPENAPI_2_TYPE_MAPPING.get(param.get("schema", {}).get("type"))
+            schema = param.get("schema", {})
+            param_type = OPENAPI_2_TYPE_MAPPING.get(schema.get("type"))
+            if "anyOf" in schema:
+                param_type = self.client_generator.process_schema("", schema)
+                self.models.update(param_type.models)
+
             if not param_type:
                 raise NotImplementedError("Invalid type for parameter")
 
@@ -149,6 +165,7 @@ class LimaFunction:
                         if "$ref" in any_of:
                             ref = self.client_generator.get_ref(any_of["$ref"])
                             options.add(ref.name)
+                            self.models.add(ref.name)
                         else:
                             # TODO generate model on fly
                             options.add("dict")
@@ -159,8 +176,10 @@ class LimaFunction:
                     candidate = self.client_generator.process_schema("", schema)
                     if candidate.name:
                         returned_type = candidate.name
+                        self.models.add(candidate.name)
                     elif candidate.type == SchemaObjectType.ALIAS:
-                        _, returned_type = str(candidate).strip().rsplit(" = ", 1)
+                        returned_type = candidate.attributes
+                        self.models.update(candidate.models)
                     elif candidate.type == SchemaObjectType.OBJECT:
                         obj_name = snake_to_camel(schema.get("description", ""))
                         candidate = self.client_generator.process_schema(obj_name, schema)
@@ -206,13 +225,15 @@ class LimaFunction:
                     model_type = "None"
                 exception_name = model_type if model_type != "None" else details
 
+                if exception_name in self.models:
+                    exception_name = details
                 if "[" in exception_name:
                     exception_name = details
 
                 numbers = STAR_WITH_NUMBER.match(exception_name)
                 if numbers:
                     number = numbers.group()
-                    exception_name = exception_name[len(number) :] + number
+                    exception_name = exception_name[len(number):] + number
 
                 low_ex = exception_name.lower()
                 if not any(word in low_ex for word in ["error", "invalid", "exception"]):
@@ -254,6 +275,7 @@ class ClientGenerator:
     def __init__(self, schema_parser: SchemaParser, paths: dict):
         self.schema_parser: SchemaParser = schema_parser
         self.paths: dict = paths
+        self.models = set()
         self._str = ""
 
     def __str__(self) -> str:
@@ -272,8 +294,9 @@ class ClientGenerator:
         class_methods = ""
         for path, methods in self.paths.items():
             for method, data in methods.items():
-                funct = LimaFunction(self.schema_parser, method, path, data)
+                funct = LimaFunction(self, method, path, data)
                 class_methods += str(funct)
+                self.models.update(funct.models)
                 exceptions.update(funct._exceptions)
                 embed_cls.update(funct._embed_cls)
 

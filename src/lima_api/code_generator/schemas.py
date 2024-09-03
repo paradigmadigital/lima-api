@@ -35,6 +35,9 @@ class SchemaObjectType(str, Enum):
     OBJECT = "object"
     ALIAS = "alias"
     ARRAY = "array"
+    ENUM = "enum"
+    UNION = "union"
+    CONST = "const"
 
 
 class PropertyParser:
@@ -47,12 +50,15 @@ class PropertyParser:
         self._str: str = ""
         self.enum: Optional[EnumObject] = None
         self.embed_cls: Optional[SchemaObject] = None
+        self.models = set()
 
     def _get_final_type(self, obj):
         def_type = None
         if "$ref" in obj:
             ref = self.parser.get_ref(obj.get("$ref"))
             def_type = ref.name
+            self.models.add(ref.name)
+            self.models.update(ref.models)
 
         return def_type
 
@@ -65,6 +71,8 @@ class PropertyParser:
                 item_type = items.get("type")
                 if "$ref" in items:
                     ref = self.parser.get_ref(items.get("$ref"))
+                    self.models.add(ref.name)
+                    self.models.update(ref.models)
                     def_type = f"{def_type}[{ref.name}]"
                 else:
                     is_list = False
@@ -76,6 +84,8 @@ class PropertyParser:
                             if "$ref" in item:
                                 ref = self.parser.get_ref(item.get("$ref"))
                                 any_of.append(ref.name)
+                                self.models.add(ref.name)
+                                self.models.update(ref.models)
                             elif item.get("type") in OPENAPI_2_TYPE_MAPPING:
                                 item_type = OPENAPI_2_TYPE_MAPPING.get(item.get("type"))
                                 any_of.append(item_type)
@@ -90,6 +100,8 @@ class PropertyParser:
                             item_type = snake_to_camel(self.name) + "Embed"
                             obj = SchemaObject(self.parser, item_type)
                             obj.set_as_object(items.get("properties"), items.get("required", []))
+                            self.models.add(obj.name)
+                            self.models.update(obj.models)
                             self.embed_cls = obj
                         else:
                             raise NotImplementedError("Unsupported jet")
@@ -108,6 +120,8 @@ class PropertyParser:
                 def_type = type_name
         if "$ref" in self.definition:
             ref = self.parser.get_ref(self.definition.get("$ref"))
+            self.models.add(ref.name)
+            self.models.update(ref.models)
             def_type = ref.name
         field_kwargs = ""
         field_name = camel_to_snake(self.name)
@@ -142,6 +156,7 @@ class SchemaObject:
         self.enums: list[EnumObject] = []
         self.embed_cls: list[SchemaObject] = []
         self.attributes: str = ""
+        self.models = set()
 
     def __str__(self):
         return self._str
@@ -155,6 +170,7 @@ class SchemaObject:
     def set_as_object(self, properties: dict, required: Optional[list] = None) -> None:
         self.type = SchemaObjectType.OBJECT
         self.name = snake_to_camel(self.name)
+        self.models.add(self.name)
         if required is None:
             required = []
 
@@ -162,6 +178,7 @@ class SchemaObject:
         for prop, definition in properties.items():
             parser = PropertyParser(self.parser, prop, definition, is_required=prop in required)
             parser.parse()
+            self.models.update(parser.models)
             if parser.enum:
                 self.enums.append(parser.enum)
             props.append(parser)
@@ -182,6 +199,7 @@ class SchemaObject:
     def set_as_alias(self, alias_type: str) -> None:
         self.type = SchemaObjectType.ALIAS
         self.name = snake_to_camel(self.name)
+        self.attributes = alias_type
         self._str = f"\n{self.name}: typing.TypeAlias = {alias_type}\n"
 
     def set_as_array(self, array_type: str, required=False) -> None:
@@ -191,6 +209,42 @@ class SchemaObject:
         else:
             self._str = f"list[{array_type}]"
 
+    def set_as_enum(self, type_name, options: list[Any], enum_type: OpenApiType):
+        self.type = SchemaObjectType.ENUM
+        self.models.add(type_name)
+        self._str = str(EnumObject(type_name, options, enum_type))
+
+    def set_as_const(self, value):
+        self.type = SchemaObjectType.CONST
+        self._str = f"Literal[{value}]"
+
+    def set_as_union(self, items):
+        self.type = SchemaObjectType.UNION
+        options: set[str] = set()
+        for any_of in items:
+            if "$ref" in any_of:
+                ref = self.parser.get_ref(any_of["$ref"])
+                self.models.add(ref.name)
+                options.add(ref.name)
+            elif "items" in any_of:
+                ops = []
+                if "$ref" in any_of["items"]:
+                    ref = self.parser.get_ref(any_of["$ref"])
+                    self.models.add(ref.name)
+                    ops.append(ref.name)
+                elif any_of["items"].get("type") in OPENAPI_2_TYPE_MAPPING:
+                    ops.append(OPENAPI_2_TYPE_MAPPING[any_of["items"]["type"]])
+                else:
+                    raise NotImplementedError("Not supported type")
+                options.add(f"list[{', '.join(ops)}]")
+            elif any_of.get("type") in OPENAPI_2_TYPE_MAPPING:
+                some_type = OPENAPI_2_TYPE_MAPPING[any_of.get("type")]
+                options.add(some_type)
+            else:
+                # Add on embed_cls
+                raise NotImplementedError("not supported")
+        self._str = f"typing.Union[{', '.join(options)}]" if len(options) > 1 else options.pop()
+
 
 class SchemaParser:
     def __init__(self, schemas: dict[str, dict], base_name: str = "#/components/schemas/"):
@@ -198,6 +252,7 @@ class SchemaParser:
         self.base_name: str = base_name
         self.schemas: dict[str, SchemaObject] = {}
         self.order: list[str] = []
+        self.models = set()
 
     def parse(self):
         if self.schemas:
@@ -206,15 +261,23 @@ class SchemaParser:
             self.get_ref(f"{self.base_name}{name}")
 
     def process_schema(self, schema_name: str, schema_data: dict) -> SchemaObject:
-        if {"not", "anyOf", "oneOf"}.intersection(schema_data.keys()):
+        if {"not", "oneOf"}.intersection(schema_data.keys()):
             raise NotImplementedError("Not implemented")
+
+        if "anyOf" in schema_data:
+            new_schema = SchemaObject(self, schema_name)
+            new_schema.set_as_union(schema_data.get("anyOf", []))
+            self.models.update(new_schema.models)
+            return new_schema
 
         if "allOf" in schema_data:
             new_schema = SchemaObject(self, schema_name)
             for item in schema_data.get("allOf", []):
                 schema = self.process_schema(schema_name, item)
+                self.models.update(new_schema.models)
                 new_schema.attributes += schema.attributes
             new_schema.set_as_object({}, [])
+            self.models.update(new_schema.models)
             return new_schema
 
         if "properties" in schema_data and "type" not in schema_data:
@@ -224,9 +287,10 @@ class SchemaParser:
         match schema_data.get("type"):
             case "object":
                 new_schema.set_as_object(
-                    properties=schema_data.get("properties"),
+                    properties=schema_data.get("properties") or {},
                     required=schema_data.get("required"),
                 )
+                self.models.update(new_schema.models)
             case "array":
                 items = schema_data.get("items", {})
                 array_type = items.get("type")
@@ -234,12 +298,26 @@ class SchemaParser:
                     new_schema.set_as_alias(f"list[{OPENAPI_2_TYPE_MAPPING.get(array_type)}]")
                 elif "$ref" in items:
                     obj = self.get_ref(items.get("$ref"))
+                    self.models.add(obj.name)
+                    self.models.update(obj.models)
                     new_schema.set_as_alias(f"list[{obj.name}]")
                 else:
                     raise NotImplementedError(f"Type for list {array_type} not supported")
+            case "string":
+                if "enum" in schema_data:
+                    new_schema.set_as_enum(schema_name, schema_data.get("enum"), schema_data.get("type"))
+                    self.models.update(new_schema.models)
+                    return new_schema
+                if "const" in schema_data:
+                    new_schema.set_as_const(schema_data.get("const"))
+                    return new_schema
+                raise NotImplementedError(f"Type {schema_data.get('type')} not supported")
             case _:
                 if "$ref" in schema_data:
-                    return self.get_ref(schema_data.get("$ref"))
+                    obj = self.get_ref(schema_data.get("$ref"))
+                    self.models.add(obj.name)
+                    self.models.update(obj.models)
+                    return obj
                 raise NotImplementedError(f"Type {schema_data.get('type')} not supported")
         return new_schema
 
