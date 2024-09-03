@@ -10,10 +10,12 @@ build-backend = "setuptools.build_meta"
 name = "lima-api"
 dynamic = ["version"]
 description = "Lima-API is sync and async library that allows implements Rest APIs libs with python typing."
-readme = "README.md"
+readme = { file = "README.md", content-type = "text/markdown" }
 authors = [
-    { name = "Cesar Gonzalez", email = "cgonzalez@paradigmadigital.com" },
-    { name = "Victor Torre", email = "vatorre@paradigmadigital.com" }
+    { name = "Cesar Gonzalez" },
+    { name = "Victor Torre", email = "vatorre@paradigmadigital.com" },
+]
+maintainers = [
 ]
 license = { file = "LICENSE" }
 classifiers = [
@@ -28,6 +30,9 @@ dependencies = [
     "httpx",
     "opentelemetry-instrumentation-httpx",
 ]
+
+[project.scripts]
+lima-generator = "lima_api.code_generator.main:main"
 
 [tool.setuptools_scm]
 

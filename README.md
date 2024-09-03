@@ -210,3 +210,13 @@ class PetApi(lima_api.LimaApi):
 uv pip compile pyproject.toml --extra=test --extra=pydantic2 > requirements.txt
 uv pip install requirements.txt
 ```
+
+
+# Code generator
+In order to help developers to improve they work you could auto-generate your clients.
+
+You could run:
+```shell
+lima-generator tests/resources/examples/v3.0/api-with-examples.json
+```
+That create a folder `tests/resources/examples/v3.0/api-with-examples` with two files, `client.py` and `models.py`
