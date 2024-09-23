@@ -94,4 +94,36 @@ def main():
 
 
 if __name__ == "__main__":
+    CURRENT_DIR = os.path.dirname(__file__)
+    DEFAULT_FILE = os.path.join(CURRENT_DIR, "../../../tests/resources/satellite-passes_openapi.json")
+    DEFAULT_FILE = os.path.join(CURRENT_DIR, "../../../tests/resources/calculadora_openapi.json")
+    # gen_from_file(DEFAULT_FILE)
+
+    EXAMPLE_DIR = os.path.join(CURRENT_DIR, "../../../tests/resources/examples/")
+    import glob
+    import os
+
+    os.chdir(EXAMPLE_DIR)
+
+    # """
+    for f in glob.glob("../*.json"):
+        print(f)
+        gen_from_file(f)
+        print("\n\n")
+    # """
+
+    # """
+    for f in glob.glob("*/*.json"):
+        
+        if f != "v3.0/callback-example.json":
+            continue
+        
+        print(f)
+        gen_from_file(f)
+        print("\n\n")
+        # break
+    # """
+
+    # main()
+
     main()

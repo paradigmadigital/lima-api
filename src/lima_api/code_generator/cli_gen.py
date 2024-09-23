@@ -169,7 +169,15 @@ class LimaFunction:
                         else:
                             # TODO generate model on fly
                             options.add("dict")
-                    returned_type = f"typing.Union[{', '.join(options)}]" if len(options) > 1 else options.pop()
+
+                    if len(options) == 1:
+                        returned_type = options.pop()
+                    else:
+                        mode = "typing.Union"
+                        if "None" in options:
+                            options.remove("None")
+                            mode = "typing.Optional"
+                        returned_type = f"{mode}[{', '.join(options)}]"
                 elif schema.get("type") in OPENAPI_2_TYPE_MAPPING:
                     returned_type = OPENAPI_2_TYPE_MAPPING[schema.get("type")]
                 else:
