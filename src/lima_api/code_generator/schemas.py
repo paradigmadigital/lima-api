@@ -25,12 +25,16 @@ class EnumObject:
                 if key[0].isdigit():
                     key = f"{camel_to_snake(self.name).upper()}_{key}"
             attributes += f'    {key.upper()} = "{choice}"\n'
-        return BASE_CLASS.substitute(
-            model_class_name=self.name,
-            model_class_parent=f"{OPENAPI_2_TYPE_MAPPING.get(self.type)}, Enum",
-            class_attributes=attributes,
-            class_methods="",
-        ).replace("\n\n\n", "\n").replace("\n\n", "\n")
+        return (
+            BASE_CLASS.substitute(
+                model_class_name=self.name,
+                model_class_parent=f"{OPENAPI_2_TYPE_MAPPING.get(self.type)}, Enum",
+                class_attributes=attributes,
+                class_methods="",
+            )
+            .replace("\n\n\n", "\n")
+            .replace("\n\n", "\n")
+        )
 
     def __hash__(self):
         return hash(str(self))
@@ -100,7 +104,7 @@ class PropertyParser:
                 default_value = f'"{default_value}"'
             kwargs.append(f"        default={default_value},\n")
         elif "Optional" in def_type:
-            kwargs.append(f"        default=None,\n")
+            kwargs.append("        default=None,\n")
         if kwargs:
             field_kwargs += "\n"
             field_kwargs += "".join(kwargs)
@@ -156,12 +160,16 @@ class SchemaObject:
         self._str += "\n\n".join([str(cls) for cls in self.embed_cls])
         if self.embed_cls:
             self._str += "\n"
-        self._str += BASE_CLASS.substitute(
-            model_class_name=self.name,
-            model_class_parent="pydantic.BaseModel",
-            class_attributes=self.attributes,
-            class_methods="",
-        ).replace("\n\n\n", "\n").replace("\n\n", "\n")
+        self._str += (
+            BASE_CLASS.substitute(
+                model_class_name=self.name,
+                model_class_parent="pydantic.BaseModel",
+                class_attributes=self.attributes,
+                class_methods="",
+            )
+            .replace("\n\n\n", "\n")
+            .replace("\n\n", "\n")
+        )
 
     def set_as_alias(self, alias_type: str) -> None:
         self.type = SchemaObjectType.ALIAS
@@ -201,7 +209,7 @@ class SchemaObject:
                 self.models.add(ref.name)
                 options.add(ref.name)
             elif "const" in any_of:
-                const = any_of['const']
+                const = any_of["const"]
                 if isinstance(const, str):
                     const = f'"{const}"'
                 options.add(f"typing.Literal[{const}]")
@@ -311,19 +319,19 @@ class SchemaParser:
                 if "const" in schema_data:
                     new_schema.set_as_const(schema_data.get("const"))
                     return new_schema
-                new_schema.set_as_type(schema_data.get('type'))
+                new_schema.set_as_type(schema_data.get("type"))
                 return new_schema
             case OpenApiType.NUMBER:
                 if "const" in schema_data:
                     new_schema.set_as_const(schema_data.get("const"))
                     return new_schema
-                new_schema.set_as_type(schema_data.get('type'))
+                new_schema.set_as_type(schema_data.get("type"))
                 return new_schema
             case OpenApiType.INTEGER:
                 if "const" in schema_data:
                     new_schema.set_as_const(schema_data.get("const"))
                     return new_schema
-                new_schema.set_as_type(schema_data.get('type'))
+                new_schema.set_as_type(schema_data.get("type"))
                 return new_schema
             case OpenApiType.STRING:
                 if "enum" in schema_data:
@@ -337,7 +345,7 @@ class SchemaParser:
                 if "const" in schema_data:
                     new_schema.set_as_const(schema_data.get("const"))
                     return new_schema
-                new_schema.set_as_type(schema_data.get('type'))
+                new_schema.set_as_type(schema_data.get("type"))
                 return new_schema
             case _:
                 if "$ref" in schema_data:

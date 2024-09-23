@@ -114,10 +114,9 @@ if __name__ == "__main__":
 
     # """
     for f in glob.glob("*/*.json"):
-        
         if f != "v3.0/callback-example.json":
             continue
-        
+
         print(f)
         gen_from_file(f)
         print("\n\n")
