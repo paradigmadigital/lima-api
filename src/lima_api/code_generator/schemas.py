@@ -154,7 +154,7 @@ class SchemaObject:
             if parser.embed_cls is not None:
                 self.embed_cls.append(parser.embed_cls)
             self.attributes += f"\n    {parser}"
-        if not properties:
+        if not properties and not self.attributes:
             self.attributes = "    ..."
         # self._str += "".join([str(enum) for enum in self.enums])
         self._str += "\n\n".join([str(cls) for cls in self.embed_cls])
@@ -316,7 +316,7 @@ class SchemaParser:
                     self.models.update(obj.models)
                     new_schema.set_as_alias(f"list[{obj}]")
                 else:
-                    raise NotImplementedError(f"Type for list {array_type} not supported")
+                    raise NotImplementedError(f"Type for list '{array_type}' not supported")
             case OpenApiType.BOOLEAN:
                 if "const" in schema_data:
                     new_schema.set_as_const(schema_data.get("const"))
