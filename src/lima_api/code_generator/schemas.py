@@ -306,6 +306,8 @@ class SchemaParser:
                     obj = self.get_ref(items.get("$ref"))
                     self.models.add(obj.name)
                     self.models.update(obj.models)
+                    new_schema.enums.update(obj.enums)
+                    new_schema.models.update(obj.models)
                     new_schema.set_as_alias(f"list[{obj.name}]")
                 elif "anyOf" in items:
                     obj = self.process_schema(schema_name, items)
