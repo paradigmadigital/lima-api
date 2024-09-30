@@ -50,3 +50,8 @@ class LimaException(Exception):
 
 class ValidationError(LimaException):
     detail = "Validation error"
+
+    def __str__(self):
+        if getattr(self, "__cause__", None):
+            return str(self.__cause__)
+        return self.detail
