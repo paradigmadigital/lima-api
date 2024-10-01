@@ -79,6 +79,7 @@ class PropertyParser:
         schema = self.parser.process_schema(snake_to_camel(self.name), self.definition)
         def_type = schema.attributes if schema.type != SchemaObjectType.OBJECT else schema.name
         self.models.update(schema.models)
+        self.embed_cls = schema.embed_cls.pop() if schema.embed_cls else None
         if schema.type == SchemaObjectType.ENUM:
             self.enum = schema
         elif schema.enums:
@@ -315,6 +316,11 @@ class SchemaParser:
                     new_schema.models.update(obj.models)
                     self.models.update(obj.models)
                     new_schema.set_as_alias(f"list[{obj}]")
+                elif array_type == SchemaObjectType.OBJECT:
+                    obj = self.process_schema(schema_name, items)
+                    new_schema.embed_cls.append(obj)
+                    new_schema.models.update(obj.models)
+                    new_schema.set_as_alias(f"list[{obj.name}]")
                 else:
                     raise NotImplementedError(f"Type for list '{array_type}' not supported")
             case OpenApiType.BOOLEAN:
