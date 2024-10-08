@@ -104,7 +104,7 @@ def get_mappings(path: str, parameters: MappingProxyType[str, inspect.Parameter]
         attrs = get_args(parameter.annotation)
         api_name = param_name
         if isinstance(parameter.default, FieldInfo):
-            if parameter.default.serialization_alias is not None:
+            if getattr(parameter.default, 'serialization_alias', None) is not None:
                 api_name = parameter.default.serialization_alias
             elif parameter.default.alias is not None:
                 api_name = parameter.default.alias
