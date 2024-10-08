@@ -1,6 +1,6 @@
 import contextlib
 import json
-from typing import Optional, TypeVar, Union, Any
+from typing import Any, Optional, TypeVar, Union
 
 import pydantic
 
