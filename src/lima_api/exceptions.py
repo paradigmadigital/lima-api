@@ -1,6 +1,6 @@
 import contextlib
 import json
-from typing import Optional, TypeVar, Union
+from typing import Optional, TypeVar, Union, Any
 
 import pydantic
 
@@ -31,20 +31,24 @@ class LimaException(Exception):
     def __str__(self) -> str:
         return self.detail
 
-    def json(self):
+    def json(self, default: Optional[Any] = dict):
+        if self.content is None:
+            return default() if callable(default) else default
         return json.loads(self.content.decode())
 
     def object(self):
         return parse_data(self.model, self.content)
 
-    def response(self) -> Union[T, dict, bytes]:
+    def response(self, default: Optional[Any] = dict) -> Union[bytes, Any, T]:
         response = self.content
-        if self.content:
+        if self.content is not None:
             with contextlib.suppress(json.JSONDecodeError):
-                response = self.json()
+                response = self.json(default=default)
                 if self.model:
                     with contextlib.suppress(pydantic.ValidationError):
                         response = self.object()
+        else:
+            response = default() if callable(default) else default
         return response
 
 
