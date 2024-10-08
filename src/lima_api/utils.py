@@ -74,7 +74,12 @@ def get_request_params(query_params_mapping: list[dict], kwargs: dict, undefined
         is_enum = issubclass(param_map["class"], Enum)
         if is_model and model_dump_mode in [QueryParameter.DUMP_DICT, QueryParameter.DUMP_DICT_NONE]:
             if PYDANTIC_V2:
-                params.update(argument_value.model_dump(exclude_none=bool(model_dump_mode == QueryParameter.DUMP_DICT)))
+                params.update(
+                    argument_value.model_dump(
+                        by_alias=True,
+                        exclude_none=bool(model_dump_mode == QueryParameter.DUMP_DICT),
+                    )
+                )
             else:
                 params.update(argument_value.dict(exclude_none=bool(model_dump_mode == QueryParameter.DUMP_DICT)))
         elif is_model and model_dump_mode in [QueryParameter.DUMP_JSON, QueryParameter.DUMP_JSON_NONE]:
@@ -102,12 +107,15 @@ def get_mappings(path: str, parameters: MappingProxyType[str, inspect.Parameter]
         if parameter.kind != inspect.Parameter.KEYWORD_ONLY:
             raise ValueError("positional parameters are not supported, use funct(self, *, ...)")
         attrs = get_args(parameter.annotation)
+        api_name = param_name
+        if isinstance(parameter.default, FieldInfo):
+            if getattr(parameter.default, "serialization_alias", None) is not None:
+                api_name = parameter.default.serialization_alias
+            elif parameter.default.alias is not None:
+                api_name = parameter.default.alias
+
         param_map = {
-            "api_name": (
-                parameter.default.alias
-                if isinstance(parameter.default, FieldInfo) and parameter.default.alias is not None
-                else param_name
-            ),
+            "api_name": api_name,
             "kwargs_name": param_name,
             "class": (attrs[0] if attrs else parameter.annotation),
             "wrap": (parameter.annotation if attrs else None),
@@ -165,9 +173,9 @@ def get_body(body_mapping: Optional[dict], kwargs: dict):
                 body_class = TypeAdapter(body_mapping["wrap"] if body_mapping["wrap"] else body_mapping["class"])
                 body = body_class.validate_python(kwargs[body_mapping["kwargs_name"]])
                 if not isinstance(body, list):
-                    body = body.model_dump(exclude_none=True)
+                    body = body.model_dump(by_alias=True, exclude_none=True)
                 else:
-                    body = [item.model_dump(exclude_none=True) for item in body]
+                    body = [item.model_dump(by_alias=True, exclude_none=True) for item in body]
             else:
                 body_class = body_mapping["class"]
                 args = kwargs[body_mapping["kwargs_name"]]
