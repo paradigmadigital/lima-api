@@ -21,8 +21,8 @@ class LimaException(Exception):
     ):
         if detail is not None:
             self.detail = detail
-        self.status_code = status_code
-        self.content = content
+        self.status_code: Optional[int] = status_code
+        self.content: Optional[bytes] = content
 
     def __repr__(self) -> str:
         class_name = self.__class__.__name__
