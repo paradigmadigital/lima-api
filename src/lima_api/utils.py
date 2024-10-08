@@ -74,7 +74,12 @@ def get_request_params(query_params_mapping: list[dict], kwargs: dict, undefined
         is_enum = issubclass(param_map["class"], Enum)
         if is_model and model_dump_mode in [QueryParameter.DUMP_DICT, QueryParameter.DUMP_DICT_NONE]:
             if PYDANTIC_V2:
-                params.update(argument_value.model_dump(by_alias=True, exclude_none=bool(model_dump_mode == QueryParameter.DUMP_DICT)))
+                params.update(
+                    argument_value.model_dump(
+                        by_alias=True,
+                        exclude_none=bool(model_dump_mode == QueryParameter.DUMP_DICT),
+                    )
+                )
             else:
                 params.update(argument_value.dict(exclude_none=bool(model_dump_mode == QueryParameter.DUMP_DICT)))
         elif is_model and model_dump_mode in [QueryParameter.DUMP_JSON, QueryParameter.DUMP_JSON_NONE]:
@@ -104,7 +109,7 @@ def get_mappings(path: str, parameters: MappingProxyType[str, inspect.Parameter]
         attrs = get_args(parameter.annotation)
         api_name = param_name
         if isinstance(parameter.default, FieldInfo):
-            if getattr(parameter.default, 'serialization_alias', None) is not None:
+            if getattr(parameter.default, "serialization_alias", None) is not None:
                 api_name = parameter.default.serialization_alias
             elif parameter.default.alias is not None:
                 api_name = parameter.default.alias
