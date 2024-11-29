@@ -127,7 +127,7 @@ class TestLimaApi:
         assert client_mock.return_value.send.called
         assert str(exc_info.value.content) == "File not found"
         assert str(exc_info.value.status_code) == "404"
-        assert str(exc_info.value.detail) == "Http Code in response_mapping"
+        assert str(exc_info.value.detail) == "Http Code 404 in response_mapping"
 
     def test_client_generic_error_for_sync_call(self, mocker):
         client_mock = mocker.patch("httpx.Client").return_value.__enter__.return_value
@@ -140,7 +140,7 @@ class TestLimaApi:
         assert client_mock.send.called
         assert exc_info.value.content == b"Service Unavailable"
         assert exc_info.value.status_code == 503
-        assert exc_info.value.detail == "Http Code not in response_mapping"
+        assert exc_info.value.detail == "Http Code 503 not in response_mapping"
 
     def test_client_no_headers(self, mocker):
         client_mock = mocker.patch("httpx.Client").return_value.__enter__

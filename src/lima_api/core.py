@@ -210,13 +210,13 @@ class LimaApiBase:
         elif api_response.status_code in mapping:
             ex_cls: type[LimaException] = mapping[api_response.status_code]
             raise ex_cls(
-                detail=ex_cls.detail or "Http Code in response_mapping",
+                detail=ex_cls.detail or f"Http Code {api_response.status_code} in response_mapping",
                 status_code=api_response.status_code,
                 content=api_response.content,
             )
         else:
             raise exp_cls(
-                detail=exp_cls.detail or "Http Code not in response_mapping",
+                detail=exp_cls.detail or f"Http Code {api_response.status_code} not in response_mapping",
                 status_code=api_response.status_code,
                 content=api_response.content,
             )
