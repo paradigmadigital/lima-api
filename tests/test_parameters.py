@@ -81,6 +81,16 @@ class TestLimaParameters:
         assert request_kwargs["json"] is None
         assert request_kwargs["params"] == {}
 
+    def test_alias_payload(self, mocker):
+        client_mock = self._mock_request(mocker)
+
+        with self.client_cls(base_url="http://localhost") as client:
+            client.sync_all_params(path=10, body=Item(id=1, name="item"), query=100)
+        build_request_call = client_mock.return_value.build_request.call_args
+        assert "params" in build_request_call.kwargs
+        assert "name" in build_request_call.kwargs["params"]
+        assert build_request_call.kwargs["params"]["name"] == 100
+
     def test_get_models_params(self, mocker):
         client_mock = self._mock_request(mocker)
 

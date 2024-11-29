@@ -22,9 +22,15 @@ pip install lima-api
     ```python
     import lima_api
 
-    class PetNotFoundError(lima_api.LimaException): ...
+    class PetNotFoundError(lima_api.LimaException):
+        detail = "Pet not found"
 
-    class InvalidDataError(lima_api.LimaException): ...
+    class InvalidDataMessage(BaseModel):
+        message: str
+        code: str
+
+    class InvalidDataError(lima_api.LimaException):
+        model = InvalidDataMessage
     ```
 3. Create your class extend from `lima_api.SyncLimaApi` or `lima_api.LimaApi`.
     ```python
