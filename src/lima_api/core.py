@@ -3,6 +3,7 @@ import json
 import sys
 from enum import Enum
 from inspect import Signature
+from threading import Lock
 from typing import Any, Callable, Optional, Union
 
 import httpx
@@ -264,6 +265,8 @@ class SyncLimaApi(LimaApiBase):
         transport = httpx.HTTPTransport(retries=self.retries)
         self.transport: SyncOpenTelemetryTransport = SyncOpenTelemetryTransport(transport)
         self.client: Optional[httpx.Client] = None
+        self._lock = Lock()
+        self._open_connections = 0
 
     def __del__(self):
         if self.client:
@@ -375,9 +378,14 @@ def method_factory(method):
             else:
 
                 def _func(self: SyncLimaApi, *args: Any, **kwargs: Any) -> Any:
-                    auto_close = False
+                    if not hasattr(self, "_lock"):
+                        raise LimaException(detail="sync function in async client")
+
+                    if self.auto_close:
+                        with self._lock:
+                            self._open_connections += 1
+
                     if self.auto_start and (self.client is None or self.client.is_closed):
-                        auto_close = self.auto_close
                         self.__enter__()
 
                     api_request = self._create_request(
@@ -409,8 +417,11 @@ def method_factory(method):
                             detail=f"Connection error {url} - {exc.__class__} - {exc}",
                         ) from exc
                     finally:
-                        if auto_close:
-                            self.__exit__(*sys.exc_info())
+                        if self.auto_close:
+                            with self._lock:
+                                self._open_connections -= 1
+                                if not bool(self._open_connections):
+                                    self.__exit__(*sys.exc_info())
 
                     response = self._create_response(
                         api_response=api_response,
