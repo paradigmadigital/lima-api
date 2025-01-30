@@ -260,6 +260,7 @@ class LimaApi(LimaApiBase):
 
     async def _request(
         self,
+        sync: bool,
         method: str,
         path: str,
         path_params_mapping: dict,
@@ -286,7 +287,7 @@ class LimaApi(LimaApiBase):
 
         try:
             api_request = self._create_request(
-                sync=False,
+                sync=sync,
                 method=method,
                 path=path,
                 path_params_mapping=path_params_mapping,
@@ -368,6 +369,7 @@ class SyncLimaApi(LimaApiBase):
 
     def _request(
         self,
+        sync: bool,
         method: str,
         path: str,
         path_params_mapping: dict,
@@ -395,7 +397,7 @@ class SyncLimaApi(LimaApiBase):
                 self.__enter__()
 
             api_request = self._create_request(
-                sync=True,
+                sync=sync,
                 method=method,
                 path=path,
                 path_params_mapping=path_params_mapping,
@@ -469,6 +471,7 @@ def method_factory(method):
 
                 async def _func(self: LimaApi, *args: Any, **kwargs: Any) -> Any:
                     return await self._request(
+                        not is_async,
                         method,
                         path,
                         path_params_mapping,
@@ -491,6 +494,7 @@ def method_factory(method):
                         raise LimaException(detail="sync function in async client")
 
                     return self._request(
+                        not is_async,
                         method,
                         path,
                         path_params_mapping,
