@@ -46,6 +46,7 @@ class LimaApiBase:
     default_response_code: int = DEFAULT_RESPONSE_CODE
     undefined_values: tuple[Any, ...] = DEFAULT_UNDEFINED_VALUES
     default_exception: type[LimaException] = LimaException
+    default_send_kwargs: dict[str, Any] = {"follow_redirects": True}
 
     def __new__(cls, *args, **kwargs):
         new_class = super().__new__(cls)
@@ -257,6 +258,73 @@ class LimaApi(LimaApiBase):
             await self.client.__aexit__(exc_type, exc, tb)
         await self.stop_client()
 
+    async def _request(
+        self,
+        method: str,
+        path: str,
+        path_params_mapping: dict,
+        kwargs: dict,
+        return_class: Any,
+        body_mapping: Optional[dict] = None,
+        query_params_mapping: list[dict] = None,
+        header_mapping: list[dict] = None,
+        undefined_values: Optional[tuple[Any, ...]] = None,
+        headers: Optional[dict[str, str]] = None,
+        timeout: Optional[int] = None,
+        response_mapping: Optional[dict[int, type[LimaException]]] = None,
+        default_response_code: Optional[int] = None,
+        default_exception: Optional[type[LimaException]] = None,
+        send_kwargs: Optional[dict] = None,
+    ) -> Any:
+        if send_kwargs is None:
+            send_kwargs = self.default_send_kwargs
+
+        auto_close = False
+        if self.auto_start and (self.client is None or self.client.is_closed):
+            auto_close = True
+            await self.__aenter__()
+
+        try:
+            api_request = self._create_request(
+                sync=False,
+                method=method,
+                path=path,
+                path_params_mapping=path_params_mapping,
+                kwargs=kwargs,
+                body_mapping=body_mapping,
+                query_params_mapping=query_params_mapping,
+                header_mapping=header_mapping,
+                undefined_values=undefined_values,
+                headers=headers,
+                timeout=timeout,
+            )
+
+            self.log(
+                event=LogEvent.SEND_REQUEST,
+                request=api_request,
+            )
+            api_response = await self.client.send(api_request, **send_kwargs)
+        except httpx.HTTPError as exc:
+            try:
+                url = exc.request.url
+            except RuntimeError:
+                url = api_request.url
+            raise LimaException(
+                detail=f"Connection error {url} - {exc.__class__} - {exc}",
+            ) from exc
+        finally:
+            if auto_close:
+                await self.__aexit__(*sys.exc_info())
+
+        response = self._create_response(
+            api_response=api_response,
+            return_class=return_class,
+            response_mapping=response_mapping,
+            default_response_code=default_response_code,
+            default_exception=default_exception,
+        )
+        return response
+
 
 class SyncLimaApi(LimaApiBase):
     def __init__(self, *args, auto_close: bool = True, **kwargs):
@@ -298,6 +366,77 @@ class SyncLimaApi(LimaApiBase):
             self.client.__exit__(exc_type, exc, tb)
         self.stop_client()
 
+    def _request(
+        self,
+        method: str,
+        path: str,
+        path_params_mapping: dict,
+        kwargs: dict,
+        return_class: Any,
+        body_mapping: Optional[dict] = None,
+        query_params_mapping: list[dict] = None,
+        header_mapping: list[dict] = None,
+        undefined_values: Optional[tuple[Any, ...]] = None,
+        headers: Optional[dict[str, str]] = None,
+        timeout: Optional[int] = None,
+        response_mapping: Optional[dict[int, type[LimaException]]] = None,
+        default_response_code: Optional[int] = None,
+        default_exception: Optional[type[LimaException]] = None,
+        send_kwargs: Optional[dict] = None,
+    ) -> Any:
+        if send_kwargs is None:
+            send_kwargs = self.default_send_kwargs
+        if self.auto_close:
+            with self._lock:
+                self._open_connections += 1
+
+        try:
+            if self.auto_start and (self.client is None or self.client.is_closed):
+                self.__enter__()
+
+            api_request = self._create_request(
+                sync=True,
+                method=method,
+                path=path,
+                path_params_mapping=path_params_mapping,
+                kwargs=kwargs,
+                body_mapping=body_mapping,
+                query_params_mapping=query_params_mapping,
+                header_mapping=header_mapping,
+                undefined_values=undefined_values,
+                headers=headers,
+                timeout=timeout,
+            )
+
+            self.log(
+                event=LogEvent.SEND_REQUEST,
+                request=api_request,
+            )
+            api_response = self.client.send(api_request, **send_kwargs)
+        except httpx.HTTPError as exc:
+            try:
+                url = exc.request.url
+            except RuntimeError:
+                url = api_request.url
+            raise LimaException(
+                detail=f"Connection error {url} - {exc.__class__} - {exc}",
+            ) from exc
+        finally:
+            if self.auto_close:
+                with self._lock:
+                    self._open_connections -= 1
+                    if not bool(self._open_connections):
+                        self.__exit__(*sys.exc_info())
+
+        response = self._create_response(
+            api_response=api_response,
+            return_class=return_class,
+            response_mapping=response_mapping,
+            default_response_code=default_response_code,
+            default_exception=default_exception,
+        )
+        return response
+
 
 OriginalFunc = Callable[[LimaApi, Any], Any]
 DecoratedFunc = Callable[[LimaApi, Any], Any]
@@ -329,108 +468,44 @@ def method_factory(method):
             if is_async:
 
                 async def _func(self: LimaApi, *args: Any, **kwargs: Any) -> Any:
-                    auto_close = False
-                    if self.auto_start and (self.client is None or self.client.is_closed):
-                        auto_close = True
-                        await self.__aenter__()
-
-                    api_request = self._create_request(
-                        sync=not is_async,
-                        method=method,
-                        path=path,
-                        path_params_mapping=path_params_mapping,
-                        kwargs=kwargs,
+                    return await self._request(
+                        method,
+                        path,
+                        path_params_mapping,
+                        kwargs,
+                        return_class,
                         body_mapping=body_mapping,
                         query_params_mapping=query_params_mapping,
                         header_mapping=header_mapping,
                         undefined_values=undefined_values,
                         headers=headers,
                         timeout=timeout,
-                    )
-
-                    try:
-                        self.log(
-                            event=LogEvent.SEND_REQUEST,
-                            request=api_request,
-                        )
-                        api_response = await self.client.send(api_request, follow_redirects=True)
-                    except httpx.HTTPError as exc:
-                        try:
-                            url = exc.request.url
-                        except RuntimeError:
-                            url = api_request.url
-                        raise LimaException(
-                            detail=f"Connection error {url} - {exc.__class__} - {exc}",
-                        ) from exc
-                    finally:
-                        if auto_close:
-                            await self.__aexit__(*sys.exc_info())
-
-                    response = self._create_response(
-                        api_response=api_response,
-                        return_class=return_class,
                         response_mapping=response_mapping,
                         default_response_code=default_response_code,
                         default_exception=default_exception,
                     )
-                    return response
-
             else:
 
                 def _func(self: SyncLimaApi, *args: Any, **kwargs: Any) -> Any:
                     if not hasattr(self, "_lock"):
                         raise LimaException(detail="sync function in async client")
 
-                    if self.auto_close:
-                        with self._lock:
-                            self._open_connections += 1
-
-                    if self.auto_start and (self.client is None or self.client.is_closed):
-                        self.__enter__()
-
-                    api_request = self._create_request(
-                        sync=not is_async,
-                        method=method,
-                        path=path,
-                        path_params_mapping=path_params_mapping,
-                        kwargs=kwargs,
+                    return self._request(
+                        method,
+                        path,
+                        path_params_mapping,
+                        kwargs,
+                        return_class,
                         body_mapping=body_mapping,
                         query_params_mapping=query_params_mapping,
                         header_mapping=header_mapping,
                         undefined_values=undefined_values,
                         headers=headers,
                         timeout=timeout,
-                    )
-
-                    try:
-                        self.log(
-                            event=LogEvent.SEND_REQUEST,
-                            request=api_request,
-                        )
-                        api_response = self.client.send(api_request, follow_redirects=True)
-                    except httpx.HTTPError as exc:
-                        try:
-                            url = exc.request.url
-                        except RuntimeError:
-                            url = api_request.url
-                        raise LimaException(
-                            detail=f"Connection error {url} - {exc.__class__} - {exc}",
-                        ) from exc
-                    finally:
-                        if self.auto_close:
-                            with self._lock:
-                                self._open_connections -= 1
-                                if not bool(self._open_connections):
-                                    self.__exit__(*sys.exc_info())
-
-                    response = self._create_response(
-                        api_response=api_response,
-                        return_class=return_class,
                         response_mapping=response_mapping,
                         default_response_code=default_response_code,
                         default_exception=default_exception,
                     )
-                    return response
 
             return _func
 
