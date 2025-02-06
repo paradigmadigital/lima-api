@@ -111,7 +111,7 @@ class PropertyParser:
             field_kwargs += "".join(kwargs)
             field_kwargs += "    "
         self.type = def_type
-        self._str = f"{field_name}: {def_type} = " f"pydantic.Field({field_kwargs})"
+        self._str = f"{field_name}: {def_type} = pydantic.Field({field_kwargs})"
 
     def __str__(self):
         return self._str
