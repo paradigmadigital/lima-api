@@ -2,6 +2,7 @@ import contextlib
 import json
 from typing import Any, Optional, TypeVar, Union
 
+import httpx
 import pydantic
 
 from .utils import parse_data
@@ -16,13 +17,47 @@ class LimaException(Exception):
     def __init__(
         self,
         detail: Optional[str] = None,
-        status_code: Optional[int] = None,
+        status_code: Optional[Union[httpx.codes, int]] = None,
         content: Optional[bytes] = None,
+        request: Optional[httpx.Request] = None,
+        response: Optional[httpx.Response] = None,
     ):
         if detail is not None:
             self.detail = detail
-        self.status_code: Optional[int] = status_code
-        self.content: Optional[bytes] = content
+        self._status_code: Optional[Union[httpx.codes, int]] = status_code
+        self._content: Optional[bytes] = content
+        self._request: Optional[httpx.Request] = request
+        self._response: Optional[httpx.Response] = response
+
+    @property
+    def http_request(self):
+        if self._request is None and self._response:
+            self._request = self._response.request
+        return self._request
+
+    @property
+    def http_response(self):
+        return self._response
+
+    @property
+    def status_code(self) -> Optional[Union[httpx.codes, int]]:
+        if self._status_code is None and self._response:
+            self._status_code = self._response.status_code
+        return self._status_code
+
+    @status_code.setter
+    def status_code(self, status_code: Optional[Union[httpx.codes, int]]):
+        self._status_code = status_code
+
+    @property
+    def content(self) -> Optional[bytes]:
+        if self._content is None and self._response:
+            self._content = self._response.content
+        return self._content
+
+    @content.setter
+    def content(self, content: bytes):
+        self._content = content
 
     def __repr__(self) -> str:
         class_name = self.__class__.__name__

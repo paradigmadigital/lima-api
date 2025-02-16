@@ -32,7 +32,9 @@ class TestException:
         return exc_info
 
     def get_mock_client(self, mocker):
-        return mocker.patch("httpx.Client").return_value.__enter__.return_value
+        httpx_client_mock = mocker.patch("httpx.Client").return_value.__enter__.return_value
+        httpx_client_mock.build_request.return_value = Mock(spec=httpx.Request)
+        return httpx_client_mock
 
     def test_validation_error(self, mocker):
         client_mock = self.get_mock_client(mocker)
@@ -66,9 +68,10 @@ class TestException:
 
     def test_http_error_with_request(self, mocker):
         client_mock = self.get_mock_client(mocker)
-        exc = httpx.HTTPError("Internal Server Error")
-        client_mock.send.side_effect = exc
-        exc._request = type("FakeRequest", (object,), {"url": "http://fakeurl"})()
+        fake_request = type("FakeRequest", (object,), {"url": "http://fakeurl"})()
+        client_mock.build_request = Mock()
+        client_mock.build_request.return_value = fake_request
+        client_mock.send.side_effect = httpx.HTTPError("Internal Server Error")
 
         exc_info = self.make_query()
 

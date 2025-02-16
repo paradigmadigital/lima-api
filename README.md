@@ -219,6 +219,13 @@ uv pip install requirements.txt
 
 
 # Code generator
+https://fastapi-calculadora.onrender.com/docs
+https://raw.githubusercontent.com/redraw/satellite-passes-api/master/app/static/openapi.json
+https://github.com/redraw/satellite-passes-api/
+
+
+
+# Code generator
 In order to help developers to improve they work you could auto-generate your clients.
 
 You could run:

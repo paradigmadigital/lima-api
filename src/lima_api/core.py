@@ -35,15 +35,39 @@ class LogEvent(str, Enum):
     SEND_REQUEST = "send_request"
     RECEIVED_RESPONSE = "received_response"
     STOP_CLIENT = "stop_client"
+    RETRY = "retry"
+
+
+class LimaRetryProcessor:
+    max_retry: int = 1
+
+    def __init__(self):
+        self.retry_count: int = 0
+
+    def do_retry(self, client: Union["LimaApi", "SyncLimaApi"], exception: LimaException) -> bool:
+        """
+        Check before call process.
+        In case that False is returned `self.process` never will call
+        and request will not be retried,
+        """
+        self.retry_count += 1
+        return self.retry_count < self.max_retry
+
+    async def process(self, client: "LimaApi", exception: LimaException) -> bool:
+        """
+        Do the process required and return `True` if you want retry.
+        """
+        return True
 
 
 class LimaApiBase:
     headers: dict[str, str]
-    response_mapping: dict[int, type[LimaException]]
+    response_mapping: dict[Union[httpx.codes, int], type[LimaException]]
+    retry_mapping: dict[Union[httpx.codes, int, None], type[LimaRetryProcessor]] = {}
     client_kwargs: dict
     retries: int = DEFAULT_HTTP_RETRIES
     timeout: int = DEFAULT_HTTP_TIMEOUT
-    default_response_code: int = DEFAULT_RESPONSE_CODE
+    default_response_code: Union[httpx.codes, int] = DEFAULT_RESPONSE_CODE
     undefined_values: tuple[Any, ...] = DEFAULT_UNDEFINED_VALUES
     default_exception: type[LimaException] = LimaException
     default_send_kwargs: dict[str, Any] = {"follow_redirects": True}
@@ -65,8 +89,8 @@ class LimaApiBase:
         retries: Optional[int] = None,
         timeout: Optional[int] = None,
         headers: Optional[dict[str, str]] = None,
-        default_response_code: Optional[int] = None,
-        response_mapping: Optional[dict[int, type[LimaException]]] = None,
+        default_response_code: Optional[Union[httpx.codes, int]] = None,
+        response_mapping: Optional[dict[Union[httpx.codes, int], type[LimaException]]] = None,
         undefined_values: tuple[Any, ...] = None,
         default_exception: Optional[type[LimaException]] = None,
         client_kwargs: Optional[dict] = None,
@@ -183,8 +207,8 @@ class LimaApiBase:
         *,
         api_response: httpx.Response,
         return_class: Any,
-        response_mapping: Optional[dict[int, type[LimaException]]] = None,
-        default_response_code: Optional[int] = None,
+        response_mapping: Optional[dict[Union[httpx.codes, int], type[LimaException]]] = None,
+        default_response_code: Optional[Union[httpx.codes, int]] = None,
         default_exception: Optional[type[LimaException]] = None,
     ):
         mapping = self.response_mapping
@@ -208,6 +232,8 @@ class LimaApiBase:
                 raise ValidationError(
                     status_code=api_response.status_code,
                     content=api_response.content,
+                    request=api_response.request,
+                    response=api_response,
                 ) from ex
         elif api_response.status_code in mapping:
             ex_cls: type[LimaException] = mapping[api_response.status_code]
@@ -215,12 +241,16 @@ class LimaApiBase:
                 detail=ex_cls.detail or f"Http Code {api_response.status_code} in response_mapping",
                 status_code=api_response.status_code,
                 content=api_response.content,
+                request=api_response.request,
+                response=api_response,
             )
         else:
             raise exp_cls(
                 detail=exp_cls.detail or f"Http Code {api_response.status_code} not in response_mapping",
                 status_code=api_response.status_code,
                 content=api_response.content,
+                request=api_response.request,
+                response=api_response,
             )
         return response
 
@@ -258,6 +288,69 @@ class LimaApi(LimaApiBase):
             await self.client.__aexit__(exc_type, exc, tb)
         await self.stop_client()
 
+    async def make_request(
+        self,
+        sync: bool,
+        method: str,
+        path: str,
+        path_params_mapping: dict,
+        kwargs: dict,
+        return_class: Any,
+        body_mapping: Optional[dict] = None,
+        query_params_mapping: list[dict] = None,
+        header_mapping: list[dict] = None,
+        undefined_values: Optional[tuple[Any, ...]] = None,
+        headers: Optional[dict[str, str]] = None,
+        timeout: Optional[int] = None,
+        response_mapping: Optional[dict[Union[httpx.codes, int], type[LimaException]]] = None,
+        default_response_code: Optional[Union[httpx.codes, int]] = None,
+        default_exception: Optional[type[LimaException]] = None,
+        send_kwargs: Optional[dict] = None,
+        retry_mapping: Optional[dict[Union[httpx.codes, int, None], type[LimaRetryProcessor]]] = None,
+    ) -> Any:
+        do_request = True
+        if retry_mapping is None:
+            retry_mapping = {}
+        retry_objects: dict[Union[httpx.codes, int, None], LimaRetryProcessor] = {}
+        while do_request:
+            try:
+                response = await self._request(
+                    sync=sync,
+                    method=method,
+                    path=path,
+                    path_params_mapping=path_params_mapping,
+                    kwargs=kwargs,
+                    return_class=return_class,
+                    body_mapping=body_mapping,
+                    query_params_mapping=query_params_mapping,
+                    header_mapping=header_mapping,
+                    undefined_values=undefined_values,
+                    headers=headers,
+                    timeout=timeout,
+                    response_mapping=response_mapping,
+                    default_response_code=default_response_code,
+                    default_exception=default_exception,
+                    send_kwargs=send_kwargs,
+                )
+                return response
+            except LimaException as ex:
+                do_request = False
+                retry_cls = None
+                if ex.status_code in retry_mapping:
+                    retry_cls = retry_mapping[ex.status_code]
+                elif ex.status_code in self.retry_mapping:
+                    retry_cls = self.retry_mapping[ex.status_code]
+                if retry_cls:
+                    if ex.status_code not in retry_objects:
+                        retry_protocol = retry_cls()
+                        retry_objects[ex.status_code] = retry_protocol
+                    do_request = retry_objects[ex.status_code].do_retry(self, ex)
+                    if do_request:
+                        do_request = await retry_objects[ex.status_code].process(self, ex)
+
+                if not do_request:
+                    raise ex
+
     async def _request(
         self,
         sync: bool,
@@ -272,8 +365,8 @@ class LimaApi(LimaApiBase):
         undefined_values: Optional[tuple[Any, ...]] = None,
         headers: Optional[dict[str, str]] = None,
         timeout: Optional[int] = None,
-        response_mapping: Optional[dict[int, type[LimaException]]] = None,
-        default_response_code: Optional[int] = None,
+        response_mapping: Optional[dict[Union[httpx.codes, int], type[LimaException]]] = None,
+        default_response_code: Optional[Union[httpx.codes, int]] = None,
         default_exception: Optional[type[LimaException]] = None,
         send_kwargs: Optional[dict] = None,
     ) -> Any:
@@ -285,6 +378,8 @@ class LimaApi(LimaApiBase):
             auto_close = True
             await self.__aenter__()
 
+        api_request = None
+        api_response = None
         try:
             api_request = self._create_request(
                 sync=sync,
@@ -306,12 +401,11 @@ class LimaApi(LimaApiBase):
             )
             api_response = await self.client.send(api_request, **send_kwargs)
         except httpx.HTTPError as exc:
-            try:
-                url = exc.request.url
-            except RuntimeError:
-                url = api_request.url
+            url = api_request.url if api_request else f"{self.base_url}{path}"
             raise LimaException(
                 detail=f"Connection error {url} - {exc.__class__} - {exc}",
+                request=api_request,
+                response=api_response,
             ) from exc
         finally:
             if auto_close:
@@ -367,6 +461,67 @@ class SyncLimaApi(LimaApiBase):
             self.client.__exit__(exc_type, exc, tb)
         self.stop_client()
 
+    def make_request(
+        self,
+        sync: bool,
+        method: str,
+        path: str,
+        path_params_mapping: dict,
+        kwargs: dict,
+        return_class: Any,
+        body_mapping: Optional[dict] = None,
+        query_params_mapping: list[dict] = None,
+        header_mapping: list[dict] = None,
+        undefined_values: Optional[tuple[Any, ...]] = None,
+        headers: Optional[dict[str, str]] = None,
+        timeout: Optional[int] = None,
+        response_mapping: Optional[dict[Union[httpx.codes, int], type[LimaException]]] = None,
+        default_response_code: Optional[Union[httpx.codes, int]] = None,
+        default_exception: Optional[type[LimaException]] = None,
+        send_kwargs: Optional[dict] = None,
+        retry_mapping: Optional[dict[Union[httpx.codes, int, None], type[LimaRetryProcessor]]] = None,
+    ) -> Any:
+        do_request = True
+        if retry_mapping is None:
+            retry_mapping = {}
+        retry_objects: dict[Union[httpx.codes, int, None], LimaRetryProcessor] = {}
+        while do_request:
+            try:
+                response = self._request(
+                    sync=sync,
+                    method=method,
+                    path=path,
+                    path_params_mapping=path_params_mapping,
+                    kwargs=kwargs,
+                    return_class=return_class,
+                    body_mapping=body_mapping,
+                    query_params_mapping=query_params_mapping,
+                    header_mapping=header_mapping,
+                    undefined_values=undefined_values,
+                    headers=headers,
+                    timeout=timeout,
+                    response_mapping=response_mapping,
+                    default_response_code=default_response_code,
+                    default_exception=default_exception,
+                    send_kwargs=send_kwargs,
+                )
+                return response
+            except LimaException as ex:
+                do_request = False
+                retry_cls = None
+                if ex.status_code in retry_mapping:
+                    retry_cls = retry_mapping[ex.status_code]
+                elif ex.status_code in self.retry_mapping:
+                    retry_cls = self.retry_mapping[ex.status_code]
+                if retry_cls:
+                    if ex.status_code not in retry_objects:
+                        retry_protocol = retry_cls()
+                        retry_objects[ex.status_code] = retry_protocol
+                    do_request = retry_objects[ex.status_code].do_retry(self, ex)
+
+                if not do_request:
+                    raise ex
+
     def _request(
         self,
         sync: bool,
@@ -381,8 +536,8 @@ class SyncLimaApi(LimaApiBase):
         undefined_values: Optional[tuple[Any, ...]] = None,
         headers: Optional[dict[str, str]] = None,
         timeout: Optional[int] = None,
-        response_mapping: Optional[dict[int, type[LimaException]]] = None,
-        default_response_code: Optional[int] = None,
+        response_mapping: Optional[dict[Union[httpx.codes, int], type[LimaException]]] = None,
+        default_response_code: Optional[Union[httpx.codes, int]] = None,
         default_exception: Optional[type[LimaException]] = None,
         send_kwargs: Optional[dict] = None,
     ) -> Any:
@@ -392,6 +547,8 @@ class SyncLimaApi(LimaApiBase):
             with self._lock:
                 self._open_connections += 1
 
+        api_request = None
+        api_response = None
         try:
             if self.auto_start and (self.client is None or self.client.is_closed):
                 self.__enter__()
@@ -416,12 +573,11 @@ class SyncLimaApi(LimaApiBase):
             )
             api_response = self.client.send(api_request, **send_kwargs)
         except httpx.HTTPError as exc:
-            try:
-                url = exc.request.url
-            except RuntimeError:
-                url = api_request.url
+            url = api_request.url if api_request else f"{self.base_url}{path}"
             raise LimaException(
                 detail=f"Connection error {url} - {exc.__class__} - {exc}",
+                request=api_request,
+                response=api_response,
             ) from exc
         finally:
             if self.auto_close:
@@ -448,11 +604,12 @@ def method_factory(method):
     def http_method(
         path: str,
         timeout: Optional[int] = None,
-        default_response_code: Optional[int] = None,
-        response_mapping: Optional[dict[int, type[LimaException]]] = None,
+        default_response_code: Optional[Union[httpx.codes, int]] = None,
+        response_mapping: Optional[dict[Union[httpx.codes, int], type[LimaException]]] = None,
         undefined_values: Optional[tuple[Any, ...]] = None,
         headers: Optional[dict[str, str]] = None,
         default_exception: Optional[type[LimaException]] = None,
+        retry_mapping: Optional[dict[Union[httpx.codes, int, None], type[LimaRetryProcessor]]] = None,
     ) -> Callable:
         path = path.replace(" ", "")
 
@@ -470,7 +627,7 @@ def method_factory(method):
             if is_async:
 
                 async def _func(self: LimaApi, *args: Any, **kwargs: Any) -> Any:
-                    return await self._request(
+                    return await self.make_request(
                         not is_async,
                         method,
                         path,
@@ -486,6 +643,7 @@ def method_factory(method):
                         response_mapping=response_mapping,
                         default_response_code=default_response_code,
                         default_exception=default_exception,
+                        retry_mapping=retry_mapping,
                     )
             else:
 
@@ -493,7 +651,7 @@ def method_factory(method):
                     if not hasattr(self, "_lock"):
                         raise LimaException(detail="sync function in async client")
 
-                    return self._request(
+                    return self.make_request(
                         not is_async,
                         method,
                         path,
@@ -509,6 +667,7 @@ def method_factory(method):
                         response_mapping=response_mapping,
                         default_response_code=default_response_code,
                         default_exception=default_exception,
+                        retry_mapping=retry_mapping,
                     )
 
             return _func
