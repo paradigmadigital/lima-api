@@ -188,6 +188,15 @@ In some case we need create a global client. In that cases maybe you don't want 
 > * We recommend use `with` in Asynchronous and in Synchronous mode with `auto_start=True` and `auto_close=False`.
 
 
+## Retry processors
+Retry processors allows you to implements more complex retry flows.
+The base class have a `max_retry: int` property that allow make several retries.
+
+* [lima_api.retry_processors.RetryAfterProcessor](src%2Flima_api%2Fretry_processors.py):
+   Allows you make retry based on [Retry-After](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Retry-After) header.
+* [lima_api.retry_processors.AutoLoginProcessor](src%2Flima_api%2Fretry_processors.py):
+   Will call to client `autologin(self) -> bool` function.
+
 ## Helps for developers
 
 By default, lima-api don't log any information, whoever in some cases you need log information.
@@ -216,13 +225,6 @@ class PetApi(lima_api.LimaApi):
 uv pip compile pyproject.toml --extra=test --extra=pydantic2 > requirements.txt
 uv pip install requirements.txt
 ```
-
-
-# Code generator
-https://fastapi-calculadora.onrender.com/docs
-https://raw.githubusercontent.com/redraw/satellite-passes-api/master/app/static/openapi.json
-https://github.com/redraw/satellite-passes-api/
-
 
 
 # Code generator
