@@ -205,6 +205,17 @@ class TestLimaApi:
             "grant_type": "grant_type",
         }
 
+    def test_fix_two_calls_with_auto_close_without_auto_start(self, mocker):
+        client_mock = mocker.patch("httpx.Client").return_value.__enter__
+        client_mock.return_value.send.return_value.status_code = 200
+        client_mock.return_value.send.return_value.content = b""
+
+        with self.client_cls(base_url="http://localhost", auto_start=False, auto_close=True) as client:
+            client.sync_get_bytes()
+            client.sync_get_bytes()
+
+        assert client.auto_close is False
+
     def test_client_get_bytes_json(self, mocker):
         client_mock = mocker.patch("httpx.Client").return_value.__enter__
         client_mock.return_value.send.return_value.status_code = 200
