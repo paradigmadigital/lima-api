@@ -1,7 +1,12 @@
 import asyncio
+import datetime
+from typing import Optional
 
 import httpx
 import pytest
+from freezegun import freeze_time
+from httpx._types import HeaderTypes
+
 from client import (
     AsyncClient,
     Item,
@@ -9,10 +14,11 @@ from client import (
     LoginDataValidate,
     SyncClient,
     SyncDeclarativeConfClient,
-    UnexpectedError,
+    UnexpectedError, TooManyRequestError,
 )
 
 import lima_api
+from lima_api.config import settings
 
 
 class TestAsyncLimaApi:
@@ -272,3 +278,77 @@ class TestDeclarativeConfLimaApi(TestLimaApi):
 
     def setup_method(self):
         self.client_cls = SyncDeclarativeConfClient
+
+
+class TestRetryProcessorLimaApi(TestLimaApi):
+
+    def setup_method(self):
+        self.client_cls = SyncClient
+
+    def mock_httpx_response(
+        self,
+        mocker,
+        status_code: httpx.codes = 200,
+        content: bytes = b"",
+        headers: Optional[HeaderTypes] = None,
+    ):
+        client_mock = mocker.patch("httpx.Client").return_value.__enter__
+        client_mock.return_value.send.return_value.status_code = status_code
+        client_mock.return_value.send.return_value.content = content
+        client_mock.return_value.send.return_value.headers = headers or {}
+        return client_mock
+
+    def check_retry_after(self, mocker, retry_header, expected_call_value):
+        httpx_mock = self.mock_httpx_response(
+            mocker,
+            httpx.codes.TOO_MANY_REQUESTS,
+            b"",
+            {"Retry-After": retry_header} if retry_header else None,
+        )
+        sync_sleep = mocker.patch("lima_api.retry_processors.sleep")
+        async_sleep = mocker.patch("asyncio.sleep")
+
+        with self.client_cls(base_url="http://localhost/") as client, pytest.raises(TooManyRequestError) as exc_info:
+            client.sync_list()
+        assert httpx_mock.return_value.send.call_count == settings.lima_retry_after_max_retries + 1
+        assert sync_sleep.call_count == settings.lima_retry_after_max_retries
+        assert sync_sleep.call_args.args == (expected_call_value, )
+        assert async_sleep.call_count == 0
+
+    def test_unauthorized_call_to_autologin_without_function(self, mocker):
+        httpx_mock = self.mock_httpx_response(mocker, httpx.codes.UNAUTHORIZED)
+        with self.client_cls(base_url="http://localhost/") as client, pytest.raises(UnexpectedError) as exc_info:
+            client.sync_list()
+
+        assert httpx_mock.return_value.send.call_count == settings.lima_autologin_max_retries + 1
+
+    def test_unauthorized_call_to_autologin_with_function(self, mocker):
+        httpx_mock = self.mock_httpx_response(mocker, httpx.codes.UNAUTHORIZED)
+
+        with self.client_cls(base_url="http://localhost/") as client, pytest.raises(UnexpectedError) as exc_info:
+            client.autologin = mocker.Mock(return_value=False)
+            client.sync_list()
+
+        assert httpx_mock.return_value.send.call_count == 1
+        assert client.autologin.call_count == 1
+
+    def test_retry_after_by_int_min_wait(self, mocker):
+        self.check_retry_after(mocker, "1", settings.lima_retry_after_min_sleep_sec)
+
+    def test_retry_after_by_int(self, mocker):
+        self.check_retry_after(mocker, "120", 120)
+
+    @freeze_time("2025-02-28")
+    def test_retry_after_by_str_min_wait(self, mocker):
+        self.check_retry_after(mocker, "Fri, 28 Feb 2025 00:00:01 GMT", settings.lima_retry_after_min_sleep_sec)
+
+    @freeze_time("2025-02-28")
+    def test_retry_after_by_str(self, mocker):
+        self.check_retry_after(mocker, "Fri, 28 Feb 2025 00:02:00 GMT", 120)
+
+    def test_retry_after_by_wrong_str(self, mocker):
+        self.check_retry_after(mocker, "Invalid value", settings.lima_retry_after_min_sleep_sec)
+
+    def test_retry_after_without_header(self, mocker):
+        self.check_retry_after(mocker, None, settings.lima_retry_after_min_sleep_sec)
+

@@ -6,16 +6,20 @@ from typing import (
     Union,
 )
 
+import httpx
 from pydantic import BaseModel
 from pydantic.fields import FieldInfo
 
 import lima_api
+from lima_api import LimaException
+from lima_api.core import LimaRetryProcessor
 from lima_api.parameters import (
     BodyParameter,
     HeaderParameter,
     PathParameter,
     QueryParameter,
 )
+from lima_api.retry_processors import AutoLoginProcessor, RetryAfterProcessor
 
 
 class Item(BaseModel):
@@ -36,18 +40,32 @@ class ItemNotFound(lima_api.LimaException): ...
 class GenericError(lima_api.LimaException): ...
 
 
+class TooManyRequestError(lima_api.LimaException): ...
+
+
 class UnexpectedError(lima_api.LimaException): ...
 
 
 class AsyncClient(lima_api.LimaApi):
+    retry_mapping = {httpx.codes.UNAUTHORIZED: AutoLoginProcessor}
+
     @lima_api.get("/items", default_exception=GenericError)
     def sync_list(self, *, limit: int = FieldInfo(le=100)) -> list[Item]: ...
 
-    @lima_api.get("/items", default_exception=GenericError)
+    @lima_api.get(
+        "/items",
+        response_mapping={
+            429: TooManyRequestError,
+        },
+        default_exception=GenericError,
+        retry_mapping={httpx.codes.TOO_MANY_REQUESTS: RetryAfterProcessor},
+    )
     async def async_list(self, *, limit: int = FieldInfo(default=100)) -> list[Item]: ...
 
 
 class SyncClient(lima_api.SyncLimaApi):
+    retry_mapping = {httpx.codes.UNAUTHORIZED: AutoLoginProcessor}
+
     @lima_api.get("/items", default_exception=UnexpectedError)
     def sync_list_field_required(self, *, limit: int = FieldInfo(le=100)) -> list[Item]: ...
 
@@ -55,8 +73,10 @@ class SyncClient(lima_api.SyncLimaApi):
         "/items",
         response_mapping={
             404: ItemNotFound,
+            429: TooManyRequestError,
         },
         default_exception=UnexpectedError,
+        retry_mapping={httpx.codes.TOO_MANY_REQUESTS: RetryAfterProcessor},
     )
     def sync_list(self, *, limit: int = FieldInfo(le=100, default=10)) -> list[Item]: ...
 

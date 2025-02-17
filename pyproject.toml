@@ -46,6 +46,7 @@ test = [
     "pytest-cov",
     "pytest-mock",
     "pytest-httpserver",
+    "freezegun",
     "ruff",
     "uv",
     "opentelemetry-sdk",
