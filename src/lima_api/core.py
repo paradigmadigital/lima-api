@@ -53,7 +53,7 @@ class LimaRetryProcessor:
         and request will not be retried,
         """
         self.retry_count += 1
-        return self.retry_count < self.max_retry
+        return self.retry_count <= self.max_retry
 
     async def process(self, client: "LimaApi", exception: LimaException) -> bool:
         """
