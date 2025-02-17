@@ -1,5 +1,6 @@
 import inspect
 import json
+import logging
 import sys
 from enum import Enum
 from inspect import Signature
@@ -35,6 +36,7 @@ class LogEvent(str, Enum):
     SEND_REQUEST = "send_request"
     RECEIVED_RESPONSE = "received_response"
     STOP_CLIENT = "stop_client"
+    SETUP = "setup"
     RETRY = "retry"
 
 
@@ -423,8 +425,12 @@ class LimaApi(LimaApiBase):
 
 class SyncLimaApi(LimaApiBase):
     def __init__(self, *args, auto_close: bool = True, **kwargs):
-        self.auto_close: bool = auto_close
+        self.auto_close: bool = auto_close and kwargs.get("auto_start", False)
         super().__init__(*args, **kwargs)
+        if not kwargs.get("auto_start", False) and self.auto_close:
+            msg = "auto_close not allowed with auto_start=False"
+            logging.warning(msg)
+            self.log(event=LogEvent.SETUP, msg=msg)
         transport = httpx.HTTPTransport(retries=self.retries)
         self.transport: SyncOpenTelemetryTransport = SyncOpenTelemetryTransport(transport)
         self.client: Optional[httpx.Client] = None
