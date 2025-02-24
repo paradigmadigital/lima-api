@@ -46,6 +46,7 @@ test = [
     "pytest-cov",
     "pytest-mock",
     "pytest-httpserver",
+    "freezegun",
     "ruff",
     "uv",
     "opentelemetry-sdk",
@@ -81,6 +82,7 @@ select = [
 ]
 ignore = [
     "B008",  # do not perform function calls in argument defaults
+    "DTZ007",
 ]
 
 [tool.ruff.lint.extend-per-file-ignores]
