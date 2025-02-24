@@ -14,7 +14,8 @@ from client import (
     LoginDataValidate,
     SyncClient,
     SyncDeclarativeConfClient,
-    UnexpectedError, TooManyRequestError,
+    UnexpectedError,
+    TooManyRequestError,
 )
 
 import lima_api
