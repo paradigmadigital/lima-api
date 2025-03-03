@@ -226,3 +226,39 @@ You could run:
 lima-generator tests/resources/examples/v3.0/api-with-examples.json
 ```
 That create a folder `tests/resources/examples/v3.0/api-with-examples` with two files, `client.py` and `models.py`
+
+
+# Extra supports
+
+
+## Opentracing
+Because Lima-API only support OpenTelemetry when you want use with OpenTracing you could do the following:
+```python
+import random
+
+from opentelemetry import trace as opentelemetry_trace
+from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
+from opentelemetry.propagate import set_global_textmap
+from opentelemetry.propagators.b3 import B3MultiFormat
+from opentelemetry.sdk.trace import TracerProvider, IdGenerator
+from opentracing_instrumentation import get_current_span
+
+
+class OpenTracingIdGenerator(IdGenerator):
+   def generate_span_id(self) -> int:
+       span = get_current_span()
+       if not span:
+           return random.getrandbits(64)
+       return span.span_id
+
+   def generate_trace_id(self) -> int:
+       span = get_current_span()
+       if not span:
+           return random.getrandbits(128)
+       return span.trace_id
+
+tracer_provider = TracerProvider(id_generator=OpenTracingIdGenerator())
+opentelemetry_trace.set_tracer_provider(tracer_provider)
+HTTPXClientInstrumentor().instrument(tracer_provider=tracer_provider)
+set_global_textmap(B3MultiFormat())
+```
