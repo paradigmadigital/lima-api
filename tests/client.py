@@ -11,8 +11,6 @@ from pydantic import BaseModel
 from pydantic.fields import FieldInfo
 
 import lima_api
-from lima_api import LimaException
-from lima_api.core import LimaRetryProcessor
 from lima_api.parameters import (
     BodyParameter,
     HeaderParameter,
