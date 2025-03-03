@@ -72,6 +72,7 @@ class LimaApiBase:
     default_response_code: Union[httpx.codes, int] = DEFAULT_RESPONSE_CODE
     undefined_values: tuple[Any, ...] = DEFAULT_UNDEFINED_VALUES
     default_exception: type[LimaException] = LimaException
+    validation_exception: type[ValidationError] = ValidationError
     default_send_kwargs: dict[str, Any] = {"follow_redirects": True}
 
     def __new__(cls, *args, **kwargs):
@@ -231,7 +232,7 @@ class LimaApiBase:
             try:
                 response = parse_data(return_class, api_response.content)
             except (pydantic.ValidationError, json.JSONDecodeError) as ex:
-                raise ValidationError(
+                raise self.validation_exception(
                     status_code=api_response.status_code,
                     content=api_response.content,
                     request=api_response.request,
