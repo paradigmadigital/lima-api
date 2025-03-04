@@ -2,6 +2,7 @@ import inspect
 import re
 from enum import Enum
 from types import MappingProxyType
+
 try:
     from types import NoneType
 except ImportError:
