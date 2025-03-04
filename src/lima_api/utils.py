@@ -1,7 +1,12 @@
 import inspect
 import re
 from enum import Enum
-from types import MappingProxyType, NoneType
+from types import MappingProxyType
+try:
+    from types import NoneType
+except ImportError:
+    NoneType = type(None)
+
 from typing import (
     Any,
     Optional,

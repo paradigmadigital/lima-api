@@ -194,12 +194,15 @@ class TestLimaParameters:
         ):
             client.sync_required_body(item=None)
         assert exc_info.value.args == ("Invalid body",)
-        assert hasattr(exc_info.value.__cause__, "title")
-        assert exc_info.value.__cause__.title == "Item"
         errors = exc_info.value.__cause__.errors()
         assert len(errors) == 1
-        assert errors[0]["msg"] == "Input should be a valid dictionary or instance of Item"
-        assert errors[0]["input"] is None
+        error = errors[0]
+        assert error["msg"] in [
+            "Input should be a valid dictionary or instance of Item",
+            "Item expected dict not NoneType",
+        ]
+        if "input" in error:
+            assert error["input"] is None
 
     def test_required_emtpy_in_body_model(self, mocker):
         self._mock_request(mocker, content="")
@@ -210,11 +213,9 @@ class TestLimaParameters:
         ):
             client.sync_required_body(item={})
         assert exc_info.value.args == ("Invalid body",)
-        assert hasattr(exc_info.value.__cause__, "title")
-        assert exc_info.value.__cause__.title == "Item"
         errors = exc_info.value.__cause__.errors()
         assert len(errors) == 2
-        assert {error["msg"] for error in errors} == {"Field required"}
+        assert {error["msg"].capitalize() for error in errors} == {"Field required"}
         assert {error["loc"][0] for error in errors} == {"id", "name"}
 
     def test_optional_none_in_body_model(self, mocker):
