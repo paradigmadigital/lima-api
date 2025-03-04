@@ -185,6 +185,78 @@ class TestLimaParameters:
         assert "json" in request_kwargs
         assert request_kwargs["json"] == [{"id": 1, "name": "one"}, {"id": 2, "name": "test"}]
 
+    def test_required_none_in_body_model(self, mocker):
+        self._mock_request(mocker, content="")
+
+        with (
+            self.client_cls(base_url="http://localhost") as client,
+            pytest.raises(lima_api.ValidationError) as exc_info,
+        ):
+            client.sync_required_body(item=None)
+        assert exc_info.value.args == ("Invalid body",)
+        assert hasattr(exc_info.value.__cause__, "title")
+        assert exc_info.value.__cause__.title == "Item"
+        errors = exc_info.value.__cause__.errors()
+        assert len(errors) == 1
+        assert errors[0]["msg"] == "Input should be a valid dictionary or instance of Item"
+        assert errors[0]["input"] is None
+
+    def test_required_emtpy_in_body_model(self, mocker):
+        self._mock_request(mocker, content="")
+
+        with (
+            self.client_cls(base_url="http://localhost") as client,
+            pytest.raises(lima_api.ValidationError) as exc_info,
+        ):
+            client.sync_required_body(item={})
+        assert exc_info.value.args == ("Invalid body",)
+        assert hasattr(exc_info.value.__cause__, "title")
+        assert exc_info.value.__cause__.title == "Item"
+        errors = exc_info.value.__cause__.errors()
+        assert len(errors) == 2
+        assert {error["msg"] for error in errors} == {"Field required"}
+        assert {error["loc"][0] for error in errors} == {"id", "name"}
+
+    def test_optional_none_in_body_model(self, mocker):
+        client_mock = self._mock_request(mocker, content="")
+
+        with self.client_cls(base_url="http://localhost") as client:
+            client.sync_optional_body(item=None)
+
+        call_kwargs = client_mock.return_value.build_request.call_args.kwargs
+        assert "json" in call_kwargs
+        assert call_kwargs["json"] is None
+
+    def test_optional_emtpy_in_body_model(self, mocker):
+        client_mock = self._mock_request(mocker, content="")
+
+        with self.client_cls(base_url="http://localhost") as client:
+            client.sync_optional_body(item={})
+
+        call_kwargs = client_mock.return_value.build_request.call_args.kwargs
+        assert "json" in call_kwargs
+        assert call_kwargs["json"] == {"id": 0, "name": ""}
+
+    def test_none_in_query_model(self, mocker):
+        client_mock = self._mock_request(mocker)
+
+        with self.client_cls(base_url="http://localhost") as client:
+            client.sync_list_model(params=None)
+
+        call_kwargs = client_mock.return_value.build_request.call_args.kwargs
+        assert "params" in call_kwargs
+        assert call_kwargs["params"] == {}
+
+    def test_emtpy_in_query_model(self, mocker):
+        client_mock = self._mock_request(mocker)
+
+        with self.client_cls(base_url="http://localhost") as client:
+            client.sync_list_model(params={})
+
+        call_kwargs = client_mock.return_value.build_request.call_args.kwargs
+        assert "params" in call_kwargs
+        assert call_kwargs["params"] == {"params": {}}
+
     def test_header(self, mocker):
         client_mock = self._mock_request(mocker)
 
@@ -209,7 +281,10 @@ class TestLimaParameters:
         assert "Authorization" not in kwargs_call.get("headers")
 
     def test_required_header(self):
-        with self.client_cls(base_url="http://localhost") as client, pytest.raises(TypeError) as exc_info:
+        with (
+            self.client_cls(base_url="http://localhost") as client,
+            pytest.raises(lima_api.ValidationError) as exc_info,
+        ):
             client.sync_required_header()
 
         assert exc_info.value.args == ("required argument missing <bearer>",)

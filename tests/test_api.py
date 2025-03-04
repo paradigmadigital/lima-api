@@ -102,7 +102,10 @@ class TestLimaApi:
     def test_client_field_required(self, mocker):
         client_mock = mocker.patch("httpx.Client").return_value.__enter__
 
-        with self.client_cls(base_url="http://localhost/") as client, pytest.raises(TypeError) as exc_info:
+        with (
+            self.client_cls(base_url="http://localhost/") as client,
+            pytest.raises(lima_api.ValidationError) as exc_info,
+        ):
             client.sync_list_field_required()
 
         assert str(exc_info.value) == "required argument missing <limit>"
