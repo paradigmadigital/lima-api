@@ -25,13 +25,15 @@ class PathParameter(LimaParameter):
         super().__init__(Location.PATH, **kwargs)
 
 
-class QueryParameter(LimaParameter):
-    DUMP_DICT = "dict"
-    DUMP_DICT_NONE = "dict_none"
-    DUMP_JSON = "json"
-    DUMP_JSON_NONE = "json_none"
+class DumpMode(str, Enum):
+    DICT = "dict"
+    DICT_NONE = "dict_none"
+    JSON = "json"
+    JSON_NONE = "json_none"
 
-    def __init__(self, model_dump_mode=DUMP_DICT, **kwargs):
+
+class QueryParameter(LimaParameter):
+    def __init__(self, model_dump_mode: DumpMode = DumpMode.DICT, **kwargs):
         super().__init__(Location.QUERY, **kwargs)
         self.model_dump_mode = model_dump_mode
 

@@ -25,6 +25,11 @@ class Item(BaseModel):
     name: str
 
 
+class OptionalItem(BaseModel):
+    id: int = 0
+    name: str = ""
+
+
 class LoginDataValidate(BaseModel):
     username: str
     password: str
@@ -120,8 +125,14 @@ class SyncClient(lima_api.SyncLimaApi):
         query: int = QueryParameter(alias="name"),
     ) -> list[Item]: ...
 
+    @lima_api.post("/items/test")
+    def sync_required_body(self, *, item: Item) -> list[Item]: ...
+
+    @lima_api.post("/items/test")
+    def sync_optional_body(self, *, item: Optional[OptionalItem]) -> None: ...
+
     @lima_api.post("/items/split", default_exception=UnexpectedError)
-    def sync_list_objects(self, *, items: list[Item]) -> list[Item]: ...
+    def sync_list_objects(self, *, items: list[Item]) -> None: ...
 
     @lima_api.post("/items/typing", default_exception=UnexpectedError)
     def sync_list_typing_objects(self, *, items: List[Item]) -> List[Item]: ...

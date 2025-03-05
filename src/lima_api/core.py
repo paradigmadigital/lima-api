@@ -17,6 +17,7 @@ from opentelemetry.instrumentation.httpx import (
 from .config import settings
 from .exceptions import LimaException, ValidationError
 from .utils import (
+    LimaParams,
     get_body,
     get_final_url,
     get_mappings,
@@ -133,11 +134,11 @@ class LimaApiBase:
         sync: bool,
         method: str,
         path: str,
-        path_params_mapping: dict,
+        path_params_mapping: list[LimaParams],
         kwargs: dict,
-        body_mapping: Optional[dict] = None,
-        query_params_mapping: list[dict] = None,
-        header_mapping: list[dict] = None,
+        body_mapping: Optional[LimaParams] = None,
+        query_params_mapping: list[LimaParams] = None,
+        header_mapping: list[LimaParams] = None,
         undefined_values: Optional[tuple[Any, ...]] = None,
         headers: Optional[dict[str, str]] = None,
         timeout: Optional[int] = None,
@@ -150,16 +151,25 @@ class LimaApiBase:
         elif not sync and not inspect.iscoroutinefunction(self.client.send):
             raise LimaException(detail="async function in sync client")
 
-        params = get_request_params(
-            query_params_mapping,
-            kwargs,
-            undefined_values if undefined_values is not None else self.undefined_values,
-        )
+        try:
+            params = get_request_params(
+                query_params_mapping,
+                kwargs,
+                undefined_values if undefined_values is not None else self.undefined_values,
+            )
+        except TypeError as ex:
+            validation_kwargs = {}
+            if ex.args:
+                validation_kwargs["detail"] = ex.args[0]
+            raise self.validation_exception(**validation_kwargs) from ex
 
         used_params = {param["kwargs_name"] for param in path_params_mapping}
         used_params.update(param["kwargs_name"] for param in query_params_mapping)
         body_kwargs = {k: v for k, v in kwargs.items() if k not in used_params}
-        body = get_body(body_mapping=body_mapping, kwargs=body_kwargs)
+        try:
+            body = get_body(body_mapping=body_mapping, kwargs=body_kwargs)
+        except pydantic.ValidationError as ex:
+            raise self.validation_exception("Invalid body") from ex
         final_url = get_final_url(
             url=f"{self.base_url}{path}",
             path_params_mapping=path_params_mapping,
@@ -172,7 +182,7 @@ class LimaApiBase:
             _headers.update(headers)
         for header in header_mapping:
             if header["kwargs_name"] not in kwargs and "default" not in header:
-                raise TypeError(f"required argument missing <{header['kwargs_name']}>")
+                raise self.validation_exception(f"required argument missing <{header['kwargs_name']}>")
             header_value = kwargs.get(header.get("kwargs_name"))
             if header_value is not None:
                 _headers[header.get("api_name")] = header_value
@@ -296,12 +306,12 @@ class LimaApi(LimaApiBase):
         sync: bool,
         method: str,
         path: str,
-        path_params_mapping: dict,
+        path_params_mapping: list[LimaParams],
         kwargs: dict,
         return_class: Any,
-        body_mapping: Optional[dict] = None,
-        query_params_mapping: list[dict] = None,
-        header_mapping: list[dict] = None,
+        body_mapping: Optional[LimaParams] = None,
+        query_params_mapping: list[LimaParams] = None,
+        header_mapping: list[LimaParams] = None,
         undefined_values: Optional[tuple[Any, ...]] = None,
         headers: Optional[dict[str, str]] = None,
         timeout: Optional[int] = None,
@@ -359,12 +369,12 @@ class LimaApi(LimaApiBase):
         sync: bool,
         method: str,
         path: str,
-        path_params_mapping: dict,
+        path_params_mapping: list[LimaParams],
         kwargs: dict,
         return_class: Any,
-        body_mapping: Optional[dict] = None,
-        query_params_mapping: list[dict] = None,
-        header_mapping: list[dict] = None,
+        body_mapping: Optional[LimaParams] = None,
+        query_params_mapping: list[LimaParams] = None,
+        header_mapping: list[LimaParams] = None,
         undefined_values: Optional[tuple[Any, ...]] = None,
         headers: Optional[dict[str, str]] = None,
         timeout: Optional[int] = None,
@@ -473,12 +483,12 @@ class SyncLimaApi(LimaApiBase):
         sync: bool,
         method: str,
         path: str,
-        path_params_mapping: dict,
+        path_params_mapping: list[LimaParams],
         kwargs: dict,
         return_class: Any,
-        body_mapping: Optional[dict] = None,
-        query_params_mapping: list[dict] = None,
-        header_mapping: list[dict] = None,
+        body_mapping: Optional[LimaParams] = None,
+        query_params_mapping: list[LimaParams] = None,
+        header_mapping: list[LimaParams] = None,
         undefined_values: Optional[tuple[Any, ...]] = None,
         headers: Optional[dict[str, str]] = None,
         timeout: Optional[int] = None,
@@ -534,12 +544,12 @@ class SyncLimaApi(LimaApiBase):
         sync: bool,
         method: str,
         path: str,
-        path_params_mapping: dict,
+        path_params_mapping: list[LimaParams],
         kwargs: dict,
         return_class: Any,
-        body_mapping: Optional[dict] = None,
-        query_params_mapping: list[dict] = None,
-        header_mapping: list[dict] = None,
+        body_mapping: Optional[LimaParams] = None,
+        query_params_mapping: list[LimaParams] = None,
+        header_mapping: list[LimaParams] = None,
         undefined_values: Optional[tuple[Any, ...]] = None,
         headers: Optional[dict[str, str]] = None,
         timeout: Optional[int] = None,
