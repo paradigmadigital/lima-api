@@ -8,6 +8,7 @@ class Location(str, Enum):
     QUERY = "QUERY"
     BODY = "BODY"
     HEADER = "HEADER"
+    FILE = "FILE"
 
 
 class LimaParameter(FieldInfo):
@@ -46,3 +47,8 @@ class BodyParameter(LimaParameter):
 class HeaderParameter(LimaParameter):
     def __init__(self, *args, **kwargs):
         super().__init__(Location.HEADER, **kwargs)
+
+
+class FileParameter(LimaParameter):
+    def __init__(self, *args, **kwargs):
+        super().__init__(Location.FILE, **kwargs)
