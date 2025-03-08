@@ -1,14 +1,18 @@
 import sys
 from typing import (
+    IO,
     Any,
+    BinaryIO,
     List,
     Optional,
+    TextIO,
     Union,
 )
 
 import httpx
+from httpx._types import FileTypes
 from pydantic import BaseModel
-from pydantic.fields import FieldInfo
+from pydantic.fields import Field
 
 import lima_api
 from lima_api.parameters import (
@@ -27,7 +31,7 @@ class Item(BaseModel):
 
 class OptionalItem(BaseModel):
     id: int = 0
-    name: str = ""
+    name: str = Field(default="")
 
 
 class LoginDataValidate(BaseModel):
@@ -53,7 +57,7 @@ class AsyncClient(lima_api.LimaApi):
     retry_mapping = {httpx.codes.UNAUTHORIZED: AutoLoginProcessor}
 
     @lima_api.get("/items", default_exception=GenericError)
-    def sync_list(self, *, limit: int = FieldInfo(le=100)) -> list[Item]: ...
+    def sync_list(self, *, limit: int = lima_api.QueryParameter(le=100)) -> list[Item]: ...
 
     @lima_api.get(
         "/items",
@@ -63,14 +67,14 @@ class AsyncClient(lima_api.LimaApi):
         default_exception=GenericError,
         retry_mapping={httpx.codes.TOO_MANY_REQUESTS: RetryAfterProcessor},
     )
-    async def async_list(self, *, limit: int = FieldInfo(default=100)) -> list[Item]: ...
+    async def async_list(self, *, limit: int = lima_api.QueryParameter(default=100)) -> list[Item]: ...
 
 
 class SyncClient(lima_api.SyncLimaApi):
     retry_mapping = {httpx.codes.UNAUTHORIZED: AutoLoginProcessor}
 
     @lima_api.get("/items", default_exception=UnexpectedError)
-    def sync_list_field_required(self, *, limit: int = FieldInfo(le=100)) -> list[Item]: ...
+    def sync_list_field_required(self, *, limit: int = QueryParameter(le=100)) -> list[Item]: ...
 
     @lima_api.get(
         "/items",
@@ -81,7 +85,7 @@ class SyncClient(lima_api.SyncLimaApi):
         default_exception=UnexpectedError,
         retry_mapping={httpx.codes.TOO_MANY_REQUESTS: RetryAfterProcessor},
     )
-    def sync_list(self, *, limit: int = FieldInfo(le=100, default=10)) -> list[Item]: ...
+    def sync_list(self, *, limit: int = QueryParameter(le=100, default=10)) -> list[Item]: ...
 
     @lima_api.post(
         "/realms/token/{path_arg}/",
@@ -123,6 +127,7 @@ class SyncClient(lima_api.SyncLimaApi):
         path: int = PathParameter(le=100, alias="name"),
         body: Item = BodyParameter(),
         query: int = QueryParameter(alias="name"),
+        file: Optional[FileTypes] = lima_api.FileParameter(default=None),
     ) -> list[Item]: ...
 
     @lima_api.post("/items/test")
@@ -130,6 +135,12 @@ class SyncClient(lima_api.SyncLimaApi):
 
     @lima_api.post("/items/test")
     def sync_optional_body(self, *, item: Optional[OptionalItem]) -> None: ...
+
+    @lima_api.post("/file")
+    def file_upload(self, *, file: Union[IO, TextIO, BinaryIO]) -> None: ...
+
+    @lima_api.post("/file_upload")
+    def file_upload_param(self, *, file: FileTypes = lima_api.FileParameter()) -> None: ...
 
     @lima_api.post("/items/split", default_exception=UnexpectedError)
     def sync_list_objects(self, *, items: list[Item]) -> None: ...
@@ -170,10 +181,10 @@ class SyncDeclarativeConfClient(lima_api.SyncLimaApi):
     }
 
     @lima_api.get("/items")
-    def sync_list_field_required(self, *, limit: int = FieldInfo(le=100)) -> list[Item]: ...
+    def sync_list_field_required(self, *, limit: int = QueryParameter(le=100)) -> list[Item]: ...
 
     @lima_api.get("/items")
-    def sync_list(self, *, limit: int = FieldInfo(le=100, default=10)) -> list[Item]: ...
+    def sync_list(self, *, limit: int = QueryParameter(le=100, default=10)) -> list[Item]: ...
 
     @lima_api.post("/realms/token/{path_arg}/")
     def do_login(self, *, path_arg: str, login: LoginDataValidate) -> None: ...
