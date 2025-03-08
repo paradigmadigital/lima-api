@@ -86,8 +86,6 @@ class LimaApiBase:
     default_exception: type[LimaException] = LimaException
     validation_exception: type[ValidationError] = ValidationError
     default_send_kwargs: dict[str, Any] = {"follow_redirects": True}
-    default_file_content_type = "multipart/form-data"
-    supported_file_content_types = ["multipart/form-data", "application/x-www-form-urlencoded"]
 
     def __new__(cls, *args, **kwargs):
         new_class = super().__new__(cls)
@@ -204,18 +202,14 @@ class LimaApiBase:
 
         files = None
         if file_mapping:
-            files = []
-            if "content-type" not in _headers:
-                _headers["content-type"] = self.default_file_content_type
-            elif _headers.get("content-type") not in self.supported_file_content_types:
-                raise TypeError("Invalid content-type")
+            files = {}
             for file_map in file_mapping:
                 f = kwargs.get(file_map.get("kwargs_name"))
                 if f is None:
                     if NoneType not in get_args(file_map.get("wrap")):
                         raise ValidationError(f"Required parameter '{file_map.get('kwargs_name')}'")
                 else:
-                    files.append(f)
+                    files[file_map.get("api_name")] = f
 
         body_kwarg = {}
         if _headers.get("content-type", "application/json") == "application/json":
