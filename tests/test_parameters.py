@@ -272,6 +272,16 @@ class TestLimaParameters:
         assert not client_mock.return_value.build_request.called
         assert exc_info.value.detail == "Required parameter 'file'"
 
+    def test_file_by_one_typing(self, mocker):
+        client_mock = self._mock_request(mocker)
+        with self.client_cls(base_url="http://localhost") as client, open(__file__) as f:
+            client.file_one_upload(file=f)
+        assert client_mock.return_value.build_request.called
+        assert "files" in client_mock.return_value.build_request.call_args.kwargs
+        files = client_mock.return_value.build_request.call_args.kwargs.get("files")
+        assert len(files) == 1
+        assert files[0].name == __file__
+
     def test_file_by_typing(self, mocker):
         client_mock = self._mock_request(mocker)
         with self.client_cls(base_url="http://localhost") as client, open(__file__) as f:

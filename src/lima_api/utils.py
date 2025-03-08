@@ -149,7 +149,7 @@ def get_mappings(path: str, parameters: MappingProxyType[str, inspect.Parameter]
         location = Location.QUERY
         if isinstance(parameter.default, LimaParameter):
             location = parameter.default.location
-        elif FILE_TYPES.intersection(attrs):
+        elif FILE_TYPES.intersection(attrs) or FILE_TYPES.intersection({parameter.annotation}):
             location = Location.FILE
         elif issubclass(param_map["cls"], BaseModel):
             location = Location.BODY

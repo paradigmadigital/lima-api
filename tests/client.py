@@ -136,6 +136,9 @@ class SyncClient(lima_api.SyncLimaApi):
     @lima_api.post("/items/test")
     def sync_optional_body(self, *, item: Optional[OptionalItem]) -> None: ...
 
+    @lima_api.post("/one_file")
+    def file_one_upload(self, *, file: IO) -> None: ...
+
     @lima_api.post("/file")
     def file_upload(self, *, file: Union[IO, TextIO, BinaryIO]) -> None: ...
 
