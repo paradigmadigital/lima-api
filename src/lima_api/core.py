@@ -212,7 +212,7 @@ class LimaApiBase:
                     files[file_map.get("api_name")] = f
 
         body_kwarg = {}
-        if _headers.get("content-type", "application/json") == "application/json":
+        if _headers.get("content-type", "application/json") == "application/json" and not file_mapping:
             body_kwarg["json"] = body
         else:
             body_kwarg["data"] = body

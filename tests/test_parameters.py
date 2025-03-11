@@ -120,7 +120,7 @@ class TestLimaParameters:
         assert "data" in request_kwargs
         assert request_kwargs["data"] == {"id": 3, "name": "name"}
         assert "files" in request_kwargs
-        assert request_kwargs["files"] == []
+        assert request_kwargs["files"] == {}
 
     def test_many_body(self):
         with pytest.raises(ValueError) as exc_info:
@@ -280,7 +280,8 @@ class TestLimaParameters:
         assert "files" in client_mock.return_value.build_request.call_args.kwargs
         files = client_mock.return_value.build_request.call_args.kwargs.get("files")
         assert len(files) == 1
-        assert files[0].name == __file__
+        assert "file" in files
+        assert files["file"].name == __file__
 
     def test_file_by_typing(self, mocker):
         client_mock = self._mock_request(mocker)
@@ -290,7 +291,8 @@ class TestLimaParameters:
         assert "files" in client_mock.return_value.build_request.call_args.kwargs
         files = client_mock.return_value.build_request.call_args.kwargs.get("files")
         assert len(files) == 1
-        assert files[0].name == __file__
+        assert "file" in files
+        assert files["file"].name == __file__
 
     def test_file_by_param(self, mocker):
         client_mock = self._mock_request(mocker)
@@ -300,7 +302,8 @@ class TestLimaParameters:
         assert "files" in client_mock.return_value.build_request.call_args.kwargs
         files = client_mock.return_value.build_request.call_args.kwargs.get("files")
         assert len(files) == 1
-        (filename, fd, content_type) = files[0]
+        assert "file" in files
+        (filename, fd, content_type) = files["file"]
         assert filename == os.path.basename(__file__)
         assert fd.name == __file__
         assert content_type == "text/plain"
