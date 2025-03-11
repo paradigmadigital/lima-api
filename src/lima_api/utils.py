@@ -1,13 +1,8 @@
 import inspect
 import re
+import typing
 from enum import Enum
 from types import MappingProxyType
-
-try:
-    from types import NoneType
-except ImportError:
-    NoneType = type(None)
-
 from typing import (
     Any,
     Optional,
@@ -19,8 +14,13 @@ from typing import (
 )
 
 try:
+    from types import NoneType
+except ImportError:  # pragma: no cover
+    NoneType = type(None)
+
+try:
     from types import UnionType
-except ImportError:
+except ImportError:  # pragma: no cover
     UnionType = Union
 
 from pydantic import BaseModel
@@ -44,6 +44,7 @@ else:  # pragma: no cover
 BRACKET_REGEX = re.compile(settings.lima_bracket_regex)
 
 T = TypeVar("T")
+FILE_TYPES = {typing.IO, typing.TextIO, typing.BinaryIO}
 
 
 class LimaParams(TypedDict):
@@ -115,6 +116,7 @@ def get_mappings(path: str, parameters: MappingProxyType[str, inspect.Parameter]
     query_params_mapping: list[LimaParams] = []
     path_params_mapping: list[LimaParams] = []
     header_mapping: list[LimaParams] = []
+    file_mapping: list[LimaParams] = []
     body_mapping: Optional[LimaParams] = None
 
     for param_name, parameter in ((k, v) for k, v in parameters.items() if k not in ["self", "args", "kwargs"]):
@@ -148,6 +150,8 @@ def get_mappings(path: str, parameters: MappingProxyType[str, inspect.Parameter]
         location = Location.QUERY
         if isinstance(parameter.default, LimaParameter):
             location = parameter.default.location
+        elif FILE_TYPES.intersection(attrs) or FILE_TYPES.intersection({parameter.annotation}):
+            location = Location.FILE
         elif issubclass(param_map["cls"], BaseModel):
             location = Location.BODY
             if method == "GET":
@@ -168,6 +172,8 @@ def get_mappings(path: str, parameters: MappingProxyType[str, inspect.Parameter]
             body_mapping = param_map
         elif location == Location.HEADER:
             header_mapping.append(param_map)
+        elif location == Location.FILE:
+            file_mapping.append(param_map)
         else:
             raise ValueError("invalid location")
 
@@ -177,7 +183,7 @@ def get_mappings(path: str, parameters: MappingProxyType[str, inspect.Parameter]
 
         raise LimaException(detail=f"path parameters need to be defined: <{','.join(missing_path_params)}>")
 
-    return query_params_mapping, path_params_mapping, body_mapping, header_mapping
+    return query_params_mapping, path_params_mapping, body_mapping, header_mapping, file_mapping
 
 
 def get_body(body_mapping: Optional[LimaParams], kwargs: dict) -> Optional[Union[dict, list]]:

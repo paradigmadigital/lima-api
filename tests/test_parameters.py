@@ -1,3 +1,4 @@
+import os.path
 import sys
 from typing import Optional
 
@@ -116,8 +117,10 @@ class TestLimaParameters:
         request_kwargs = client_mock.return_value.build_request.call_args.kwargs
         assert "params" in request_kwargs
         assert request_kwargs["params"] == {"name": 2}
-        assert "json" in request_kwargs
-        assert request_kwargs["json"] == {"id": 3, "name": "name"}
+        assert "data" in request_kwargs
+        assert request_kwargs["data"] == {"id": 3, "name": "name"}
+        assert "files" in request_kwargs
+        assert request_kwargs["files"] == {}
 
     def test_many_body(self):
         with pytest.raises(ValueError) as exc_info:
@@ -257,6 +260,53 @@ class TestLimaParameters:
         call_kwargs = client_mock.return_value.build_request.call_args.kwargs
         assert "params" in call_kwargs
         assert call_kwargs["params"] == {"params": {}}
+
+    def test_file_check(self, mocker):
+        client_mock = self._mock_request(mocker)
+        with (
+            self.client_cls(base_url="http://localhost") as client,
+            pytest.raises(lima_api.ValidationError) as exc_info,
+        ):
+            client.file_upload(file=None)
+
+        assert not client_mock.return_value.build_request.called
+        assert exc_info.value.detail == "Required parameter 'file'"
+
+    def test_file_by_one_typing(self, mocker):
+        client_mock = self._mock_request(mocker)
+        with self.client_cls(base_url="http://localhost") as client, open(__file__) as f:
+            client.file_one_upload(file=f)
+        assert client_mock.return_value.build_request.called
+        assert "files" in client_mock.return_value.build_request.call_args.kwargs
+        files = client_mock.return_value.build_request.call_args.kwargs.get("files")
+        assert len(files) == 1
+        assert "file" in files
+        assert files["file"].name == __file__
+
+    def test_file_by_typing(self, mocker):
+        client_mock = self._mock_request(mocker)
+        with self.client_cls(base_url="http://localhost") as client, open(__file__) as f:
+            client.file_upload(file=f)
+        assert client_mock.return_value.build_request.called
+        assert "files" in client_mock.return_value.build_request.call_args.kwargs
+        files = client_mock.return_value.build_request.call_args.kwargs.get("files")
+        assert len(files) == 1
+        assert "file" in files
+        assert files["file"].name == __file__
+
+    def test_file_by_param(self, mocker):
+        client_mock = self._mock_request(mocker)
+        with self.client_cls(base_url="http://localhost") as client, open(__file__, "rb") as f:
+            client.file_upload_param(file=(os.path.basename(__file__), f, "text/plain"))
+        assert client_mock.return_value.build_request.called
+        assert "files" in client_mock.return_value.build_request.call_args.kwargs
+        files = client_mock.return_value.build_request.call_args.kwargs.get("files")
+        assert len(files) == 1
+        assert "file" in files
+        (filename, fd, content_type) = files["file"]
+        assert filename == os.path.basename(__file__)
+        assert fd.name == __file__
+        assert content_type == "text/plain"
 
     def test_header(self, mocker):
         client_mock = self._mock_request(mocker)

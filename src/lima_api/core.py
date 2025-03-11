@@ -5,7 +5,18 @@ import sys
 from enum import Enum
 from inspect import Signature
 from threading import Lock
-from typing import Any, Callable, Optional, Union
+
+try:
+    from types import NoneType
+except ImportError:  # pragma: no cover
+    NoneType = type(None)
+from typing import (
+    Any,
+    Callable,
+    Optional,
+    Union,
+    get_args,
+)
 
 import httpx
 import pydantic
@@ -56,7 +67,7 @@ class LimaRetryProcessor:
         self.retry_count += 1
         return self.retry_count <= self.max_retry
 
-    async def process(self, client: "LimaApi", exception: LimaException) -> bool:
+    async def process(self, client: "LimaApi", exception: LimaException) -> bool:  # pragma: no cover
         """
         Do the process required and return `True` if you want retry.
         """
@@ -137,8 +148,9 @@ class LimaApiBase:
         path_params_mapping: list[LimaParams],
         kwargs: dict,
         body_mapping: Optional[LimaParams] = None,
-        query_params_mapping: list[LimaParams] = None,
-        header_mapping: list[LimaParams] = None,
+        file_mapping: Optional[list[LimaParams]] = None,
+        query_params_mapping: Optional[list[LimaParams]] = None,
+        header_mapping: Optional[list[LimaParams]] = None,
         undefined_values: Optional[tuple[Any, ...]] = None,
         headers: Optional[dict[str, str]] = None,
         timeout: Optional[int] = None,
@@ -164,7 +176,8 @@ class LimaApiBase:
             raise self.validation_exception(**validation_kwargs) from ex
 
         used_params = {param["kwargs_name"] for param in path_params_mapping}
-        used_params.update(param["kwargs_name"] for param in query_params_mapping)
+        used_params.update(param["kwargs_name"] for param in (query_params_mapping or []))
+        used_params.update(file["kwargs_name"] for file in (file_mapping or []))
         body_kwargs = {k: v for k, v in kwargs.items() if k not in used_params}
         try:
             body = get_body(body_mapping=body_mapping, kwargs=body_kwargs)
@@ -180,15 +193,26 @@ class LimaApiBase:
             _headers.update(self.headers)
         if headers:
             _headers.update(headers)
-        for header in header_mapping:
+        for header in header_mapping or []:
             if header["kwargs_name"] not in kwargs and "default" not in header:
                 raise self.validation_exception(f"required argument missing <{header['kwargs_name']}>")
             header_value = kwargs.get(header.get("kwargs_name"))
             if header_value is not None:
                 _headers[header.get("api_name")] = header_value
 
+        files = None
+        if file_mapping:
+            files = {}
+            for file_map in file_mapping:
+                f = kwargs.get(file_map.get("kwargs_name"))
+                if f is None:
+                    if NoneType not in get_args(file_map.get("wrap")):
+                        raise ValidationError(f"Required parameter '{file_map.get('kwargs_name')}'")
+                else:
+                    files[file_map.get("api_name")] = f
+
         body_kwarg = {}
-        if _headers.get("content-type", "application/json") == "application/json":
+        if _headers.get("content-type", "application/json") == "application/json" and not file_mapping:
             body_kwarg["json"] = body
         else:
             body_kwarg["data"] = body
@@ -208,6 +232,7 @@ class LimaApiBase:
         api_request = self.client.build_request(
             method,
             final_url,
+            files=files,
             params=params,
             headers=_headers,
             timeout=timeout,
@@ -310,8 +335,9 @@ class LimaApi(LimaApiBase):
         kwargs: dict,
         return_class: Any,
         body_mapping: Optional[LimaParams] = None,
-        query_params_mapping: list[LimaParams] = None,
-        header_mapping: list[LimaParams] = None,
+        file_mapping: Optional[list[LimaParams]] = None,
+        query_params_mapping: Optional[list[LimaParams]] = None,
+        header_mapping: Optional[list[LimaParams]] = None,
         undefined_values: Optional[tuple[Any, ...]] = None,
         headers: Optional[dict[str, str]] = None,
         timeout: Optional[int] = None,
@@ -335,6 +361,7 @@ class LimaApi(LimaApiBase):
                     kwargs=kwargs,
                     return_class=return_class,
                     body_mapping=body_mapping,
+                    file_mapping=file_mapping,
                     query_params_mapping=query_params_mapping,
                     header_mapping=header_mapping,
                     undefined_values=undefined_values,
@@ -373,8 +400,9 @@ class LimaApi(LimaApiBase):
         kwargs: dict,
         return_class: Any,
         body_mapping: Optional[LimaParams] = None,
-        query_params_mapping: list[LimaParams] = None,
-        header_mapping: list[LimaParams] = None,
+        file_mapping: Optional[list[LimaParams]] = None,
+        query_params_mapping: Optional[list[LimaParams]] = None,
+        header_mapping: Optional[list[LimaParams]] = None,
         undefined_values: Optional[tuple[Any, ...]] = None,
         headers: Optional[dict[str, str]] = None,
         timeout: Optional[int] = None,
@@ -401,6 +429,7 @@ class LimaApi(LimaApiBase):
                 path_params_mapping=path_params_mapping,
                 kwargs=kwargs,
                 body_mapping=body_mapping,
+                file_mapping=file_mapping,
                 query_params_mapping=query_params_mapping,
                 header_mapping=header_mapping,
                 undefined_values=undefined_values,
@@ -487,8 +516,9 @@ class SyncLimaApi(LimaApiBase):
         kwargs: dict,
         return_class: Any,
         body_mapping: Optional[LimaParams] = None,
-        query_params_mapping: list[LimaParams] = None,
-        header_mapping: list[LimaParams] = None,
+        file_mapping: Optional[list[LimaParams]] = None,
+        query_params_mapping: Optional[list[LimaParams]] = None,
+        header_mapping: Optional[list[LimaParams]] = None,
         undefined_values: Optional[tuple[Any, ...]] = None,
         headers: Optional[dict[str, str]] = None,
         timeout: Optional[int] = None,
@@ -512,6 +542,7 @@ class SyncLimaApi(LimaApiBase):
                     kwargs=kwargs,
                     return_class=return_class,
                     body_mapping=body_mapping,
+                    file_mapping=file_mapping,
                     query_params_mapping=query_params_mapping,
                     header_mapping=header_mapping,
                     undefined_values=undefined_values,
@@ -548,8 +579,9 @@ class SyncLimaApi(LimaApiBase):
         kwargs: dict,
         return_class: Any,
         body_mapping: Optional[LimaParams] = None,
-        query_params_mapping: list[LimaParams] = None,
-        header_mapping: list[LimaParams] = None,
+        file_mapping: Optional[list[LimaParams]] = None,
+        query_params_mapping: Optional[list[LimaParams]] = None,
+        header_mapping: Optional[list[LimaParams]] = None,
         undefined_values: Optional[tuple[Any, ...]] = None,
         headers: Optional[dict[str, str]] = None,
         timeout: Optional[int] = None,
@@ -577,6 +609,7 @@ class SyncLimaApi(LimaApiBase):
                 path_params_mapping=path_params_mapping,
                 kwargs=kwargs,
                 body_mapping=body_mapping,
+                file_mapping=file_mapping,
                 query_params_mapping=query_params_mapping,
                 header_mapping=header_mapping,
                 undefined_values=undefined_values,
@@ -639,6 +672,7 @@ def method_factory(method):
                 path_params_mapping,
                 body_mapping,
                 header_mapping,
+                file_mapping,
             ) = get_mappings(path, sig.parameters, method)
 
             if is_async:
@@ -653,6 +687,7 @@ def method_factory(method):
                         return_class,
                         body_mapping=body_mapping,
                         query_params_mapping=query_params_mapping,
+                        file_mapping=file_mapping,
                         header_mapping=header_mapping,
                         undefined_values=undefined_values,
                         headers=headers,
@@ -677,6 +712,7 @@ def method_factory(method):
                         return_class,
                         body_mapping=body_mapping,
                         query_params_mapping=query_params_mapping,
+                        file_mapping=file_mapping,
                         header_mapping=header_mapping,
                         undefined_values=undefined_values,
                         headers=headers,
