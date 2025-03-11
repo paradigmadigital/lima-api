@@ -3,15 +3,6 @@ import re
 import typing
 from enum import Enum
 from types import MappingProxyType
-
-try:
-    from types import NoneType
-except ImportError:  # pragma: no cover
-    NoneType = type(None)
-try:
-    from types import UnionType
-except ImportError:  # pragma: no cover
-    UnionType = Union
 from typing import (
     Any,
     Optional,
@@ -21,6 +12,16 @@ from typing import (
     get_args,
     get_origin,
 )
+
+try:
+    from types import NoneType
+except ImportError:  # pragma: no cover
+    NoneType = type(None)
+
+try:
+    from types import UnionType
+except ImportError:  # pragma: no cover
+    UnionType = Union
 
 from pydantic import BaseModel
 from pydantic.fields import FieldInfo

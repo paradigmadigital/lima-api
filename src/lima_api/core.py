@@ -193,7 +193,7 @@ class LimaApiBase:
             _headers.update(self.headers)
         if headers:
             _headers.update(headers)
-        for header in (header_mapping or []):
+        for header in header_mapping or []:
             if header["kwargs_name"] not in kwargs and "default" not in header:
                 raise self.validation_exception(f"required argument missing <{header['kwargs_name']}>")
             header_value = kwargs.get(header.get("kwargs_name"))
