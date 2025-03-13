@@ -1,4 +1,5 @@
 import inspect
+import json
 import re
 import typing
 from enum import Enum
@@ -198,15 +199,15 @@ def get_body(body_mapping: Optional[LimaParams], kwargs: dict) -> Optional[Union
                 body_class = TypeAdapter(body_mapping["wrap"] if body_mapping["wrap"] else body_mapping["cls"])
                 body = body_class.validate_python(args)
                 if not isinstance(body, list):
-                    body = body.model_dump(by_alias=True, exclude_none=True)
+                    body = body.model_dump(by_alias=True, exclude_none=True, mode="json")
                 else:
-                    body = [item.model_dump(by_alias=True, exclude_none=True) for item in body]
+                    body = [item.model_dump(by_alias=True, exclude_none=True, mode="json") for item in body]
             else:
                 body_class = body_mapping["cls"]
                 if not isinstance(args, list):
-                    body = body_class.parse_obj(args).dict(exclude_none=True)
+                    body = json.loads(body_class.parse_obj(args).json(exclude_none=True))
                 else:
-                    body = [body_class.parse_obj(item).dict(exclude_none=True) for item in args]
+                    body = [json.loads(body_class.parse_obj(item).json(exclude_none=True)) for item in args]
         else:
             body = kwargs[body_mapping["kwargs_name"]]
             if not isinstance(body, (list, tuple, dict)):

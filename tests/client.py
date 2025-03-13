@@ -1,4 +1,5 @@
 import sys
+from datetime import datetime
 from typing import (
     IO,
     Any,
@@ -11,7 +12,7 @@ from typing import (
 
 import httpx
 from httpx._types import FileTypes
-from pydantic import BaseModel
+from pydantic import BaseModel, HttpUrl
 from pydantic.fields import Field
 
 import lima_api
@@ -32,6 +33,12 @@ class Item(BaseModel):
 class OptionalItem(BaseModel):
     id: int = 0
     name: str = Field(default="")
+
+
+class ResumeUrl(BaseModel):
+    resume: str = 0
+    url: HttpUrl
+    created: datetime
 
 
 class LoginDataValidate(BaseModel):
@@ -165,6 +172,9 @@ class SyncClient(lima_api.SyncLimaApi):
 
     @lima_api.get("/async_on_sync")
     async def async_on_sync(self) -> Optional[dict]: ...
+
+    @lima_api.post("/new_url")
+    def create_new_url(self, *, data: ResumeUrl) -> None: ...
 
     if sys.version_info[0] >= 3 and sys.version_info[1] > 9:
 
