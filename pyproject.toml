@@ -80,13 +80,10 @@ select = [
     "DTZ", # flake8-datetimez
     "SIM", # flake8-simplify
 ]
-ignore = [
-    "B008",  # do not perform function calls in argument defaults
-    "DTZ007",
-]
+ignore = []
 
 [tool.ruff.lint.extend-per-file-ignores]
-"tests/**/*.py" = ["S101", "S106", "UP035", "UP006"]
+"tests/**/*.py" = ["B008", "DTZ001", "S101", "S106", "UP035", "UP006"]
 
 [tool.pytest.ini_options]
 pythonpath = [

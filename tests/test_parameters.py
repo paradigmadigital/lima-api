@@ -1,11 +1,13 @@
 import os.path
 import sys
+from datetime import datetime
 from typing import Optional
 
 import pytest
 from client import (
     GenericError,
     Item,
+    ResumeUrl,
     SyncClient,
 )
 
@@ -31,6 +33,29 @@ class TestLimaParameters:
         client_mock.return_value.send.return_value.status_code = status_code
         client_mock.return_value.send.return_value.content = content
         return client_mock
+
+    def test_pydantic_json_dump(self, mocker):
+        client_mock = self._mock_request(mocker)
+
+        with self.client_cls(base_url="http://localhost") as client:
+            client.create_new_url(
+                data=ResumeUrl(
+                    resume="test",
+                    url="http://test.com/",
+                    created=datetime(2025, 3, 15),
+                )
+            )
+
+        assert client_mock.return_value.build_request.called
+        method, url = client_mock.return_value.build_request.call_args.args
+        assert method, url == ("POST", "http://localhost/new_url")
+        request_kwargs = client_mock.return_value.build_request.call_args.kwargs
+        assert "json" in request_kwargs
+        assert request_kwargs["json"] == {
+            "created": "2025-03-15T00:00:00",
+            "resume": "test",
+            "url": "http://test.com/",
+        }
 
     def test_get_params(self, mocker):
         client_mock = self._mock_request(mocker)
