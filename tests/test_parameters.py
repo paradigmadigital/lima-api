@@ -192,9 +192,7 @@ class TestLimaParameters:
 
             class TestSyncClient(lima_api.SyncLimaApi):
                 @lima_api.get("/items/split", default_exception=GenericError)
-                def sync_kwargs_no_type_but_default(
-                    self, *, first, item=BodyParameter(default=None)
-                ) -> None: ...
+                def sync_kwargs_no_type_but_default(self, *, first, item=BodyParameter(default=None)) -> None: ...
 
         assert exc_info.value.args == ("Required parameter typing for: first, item",)
 
