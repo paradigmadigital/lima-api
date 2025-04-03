@@ -119,11 +119,15 @@ def get_mappings(path: str, parameters: MappingProxyType[str, inspect.Parameter]
     header_mapping: list[LimaParams] = []
     file_mapping: list[LimaParams] = []
     body_mapping: Optional[LimaParams] = None
+    unknown_types: list[str] = []
 
     for param_name, parameter in ((k, v) for k, v in parameters.items() if k not in ["self", "args", "kwargs"]):
         if parameter.kind != inspect.Parameter.KEYWORD_ONLY:
             raise ValueError("positional parameters are not supported, use funct(self, *, ...)")
         attrs = get_args(parameter.annotation)
+        if parameter.annotation is inspect.Parameter.empty:
+            unknown_types.append(param_name)
+            continue
         api_name = param_name
         if isinstance(parameter.default, FieldInfo):
             if getattr(parameter.default, "serialization_alias", None) is not None:
@@ -177,6 +181,9 @@ def get_mappings(path: str, parameters: MappingProxyType[str, inspect.Parameter]
             file_mapping.append(param_map)
         else:
             raise ValueError("invalid location")
+
+    if unknown_types:
+        raise TypeError(f"Required parameter typing for: {', '.join(unknown_types)}")
 
     missing_path_params = set(path_params) - {p["api_name"] for p in path_params_mapping}
     if missing_path_params:

@@ -187,6 +187,24 @@ class TestLimaParameters:
 
         assert exc_info.value.args == ("positional parameters are not supported, use funct(self, *, ...)",)
 
+    def test_force_typing_args_with_default(self, mocker):
+        with pytest.raises(TypeError) as exc_info:
+
+            class TestSyncClient(lima_api.SyncLimaApi):
+                @lima_api.get("/items/split", default_exception=GenericError)
+                def sync_kwargs_no_type_but_default(self, *, first, item=BodyParameter(default=None)) -> None: ...
+
+        assert exc_info.value.args == ("Required parameter typing for: first, item",)
+
+    def test_force_typing_args(self, mocker):
+        with pytest.raises(TypeError) as exc_info:
+
+            class TestSyncClient(lima_api.SyncLimaApi):
+                @lima_api.get("/items/split", default_exception=GenericError)
+                def sync_kwargs_not_type(self, *, item: int, other) -> None: ...
+
+        assert exc_info.value.args == ("Required parameter typing for: other",)
+
     def test_list_objects(self, mocker):
         client_mock = self._mock_request(mocker)
 
