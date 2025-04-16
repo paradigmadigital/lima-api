@@ -5,14 +5,13 @@ from datetime import datetime
 from typing import Optional
 
 import pytest
-from pydantic import BaseModel
-
 from client import (
     GenericError,
     Item,
     ResumeUrl,
     SyncClient,
 )
+from pydantic import BaseModel
 
 import lima_api
 from lima_api import LimaException
@@ -32,8 +31,7 @@ class QueryModelDumpClient(lima_api.SyncLimaApi):
         *,
         query: ExampleQuery = lima_api.QueryParameter(model_dump_mode=lima_api.parameters.DumpMode.DICT),
         extra: str = "extra",
-    ) -> None:
-        ...
+    ) -> None: ...
 
     @lima_api.get("/")
     def search_dict_none(
@@ -41,8 +39,7 @@ class QueryModelDumpClient(lima_api.SyncLimaApi):
         *,
         query: ExampleQuery = lima_api.QueryParameter(model_dump_mode=lima_api.parameters.DumpMode.DICT_NONE),
         extra: str = "extra",
-    ) -> None:
-        ...
+    ) -> None: ...
 
     @lima_api.get("/")
     def search_json(
@@ -50,8 +47,7 @@ class QueryModelDumpClient(lima_api.SyncLimaApi):
         *,
         query: ExampleQuery = lima_api.QueryParameter(model_dump_mode=lima_api.parameters.DumpMode.JSON),
         extra: str = "extra",
-    ) -> None:
-        ...
+    ) -> None: ...
 
     @lima_api.get("/")
     def search_json_none(
@@ -59,8 +55,7 @@ class QueryModelDumpClient(lima_api.SyncLimaApi):
         *,
         query: ExampleQuery = lima_api.QueryParameter(model_dump_mode=lima_api.parameters.DumpMode.JSON_NONE),
         extra: str = "extra",
-    ) -> None:
-        ...
+    ) -> None: ...
 
 
 class TestModelDump:
@@ -85,13 +80,13 @@ class TestModelDump:
     def test_model_dump_mode_dict(self, mocker, function_name: str, query, expected) -> None:
         client_mock = mocker.patch("httpx.Client").return_value.__enter__
         client_mock.return_value.send.return_value.status_code = 200
-        client_mock.return_value.send.return_value.content = b''
+        client_mock.return_value.send.return_value.content = b""
         function = getattr(self.client, function_name)
         function(query=query)
 
         request_kwargs = client_mock.return_value.build_request.call_args.kwargs
-        assert 'params' in request_kwargs
-        assert request_kwargs['params'] == expected
+        assert "params" in request_kwargs
+        assert request_kwargs["params"] == expected
 
     @pytest.mark.parametrize(
         "function_name,query,expected",
@@ -111,7 +106,7 @@ class TestModelDump:
     def test_model_dump_mode_json(self, mocker, function_name: str, query, expected) -> None:
         client_mock = mocker.patch("httpx.Client").return_value.__enter__
         client_mock.return_value.send.return_value.status_code = 200
-        client_mock.return_value.send.return_value.content = b''
+        client_mock.return_value.send.return_value.content = b""
         function = getattr(self.client, function_name)
         function(query=query)
 
