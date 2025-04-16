@@ -80,7 +80,7 @@ class LimaApiBase:
     retry_mapping: dict[Union[httpx.codes, int, None], type[LimaRetryProcessor]] = {}
     client_kwargs: dict
     retries: int = DEFAULT_HTTP_RETRIES
-    timeout: int = DEFAULT_HTTP_TIMEOUT
+    timeout: float = DEFAULT_HTTP_TIMEOUT
     default_response_code: Union[httpx.codes, int] = DEFAULT_RESPONSE_CODE
     undefined_values: tuple[Any, ...] = DEFAULT_UNDEFINED_VALUES
     default_exception: type[LimaException] = LimaException
@@ -102,7 +102,7 @@ class LimaApiBase:
         base_url: str,
         *,
         retries: Optional[int] = None,
-        timeout: Optional[int] = None,
+        timeout: Optional[float] = None,
         headers: Optional[dict[str, str]] = None,
         default_response_code: Optional[Union[httpx.codes, int]] = None,
         response_mapping: Optional[dict[Union[httpx.codes, int], type[LimaException]]] = None,
@@ -153,7 +153,7 @@ class LimaApiBase:
         header_mapping: Optional[list[LimaParams]] = None,
         undefined_values: Optional[tuple[Any, ...]] = None,
         headers: Optional[dict[str, str]] = None,
-        timeout: Optional[int] = None,
+        timeout: Optional[float] = None,
     ) -> httpx.Request:
         if self.client is None:
             raise LimaException(detail="uninitialized client")
@@ -340,7 +340,7 @@ class LimaApi(LimaApiBase):
         header_mapping: Optional[list[LimaParams]] = None,
         undefined_values: Optional[tuple[Any, ...]] = None,
         headers: Optional[dict[str, str]] = None,
-        timeout: Optional[int] = None,
+        timeout: Optional[float] = None,
         response_mapping: Optional[dict[Union[httpx.codes, int], type[LimaException]]] = None,
         default_response_code: Optional[Union[httpx.codes, int]] = None,
         default_exception: Optional[type[LimaException]] = None,
@@ -405,7 +405,7 @@ class LimaApi(LimaApiBase):
         header_mapping: Optional[list[LimaParams]] = None,
         undefined_values: Optional[tuple[Any, ...]] = None,
         headers: Optional[dict[str, str]] = None,
-        timeout: Optional[int] = None,
+        timeout: Optional[float] = None,
         response_mapping: Optional[dict[Union[httpx.codes, int], type[LimaException]]] = None,
         default_response_code: Optional[Union[httpx.codes, int]] = None,
         default_exception: Optional[type[LimaException]] = None,
@@ -521,7 +521,7 @@ class SyncLimaApi(LimaApiBase):
         header_mapping: Optional[list[LimaParams]] = None,
         undefined_values: Optional[tuple[Any, ...]] = None,
         headers: Optional[dict[str, str]] = None,
-        timeout: Optional[int] = None,
+        timeout: Optional[float] = None,
         response_mapping: Optional[dict[Union[httpx.codes, int], type[LimaException]]] = None,
         default_response_code: Optional[Union[httpx.codes, int]] = None,
         default_exception: Optional[type[LimaException]] = None,
@@ -584,7 +584,7 @@ class SyncLimaApi(LimaApiBase):
         header_mapping: Optional[list[LimaParams]] = None,
         undefined_values: Optional[tuple[Any, ...]] = None,
         headers: Optional[dict[str, str]] = None,
-        timeout: Optional[int] = None,
+        timeout: Optional[float] = None,
         response_mapping: Optional[dict[Union[httpx.codes, int], type[LimaException]]] = None,
         default_response_code: Optional[Union[httpx.codes, int]] = None,
         default_exception: Optional[type[LimaException]] = None,
@@ -653,7 +653,7 @@ DecoratedFunc = Callable[[LimaApi, Any], Any]
 def method_factory(method):
     def http_method(
         path: str,
-        timeout: Optional[int] = None,
+        timeout: Optional[float] = None,
         default_response_code: Optional[Union[httpx.codes, int]] = None,
         response_mapping: Optional[dict[Union[httpx.codes, int], type[LimaException]]] = None,
         undefined_values: Optional[tuple[Any, ...]] = None,

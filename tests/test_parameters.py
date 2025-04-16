@@ -1,3 +1,4 @@
+import json
 import os.path
 import sys
 from datetime import datetime
@@ -10,10 +11,111 @@ from client import (
     ResumeUrl,
     SyncClient,
 )
+from pydantic import BaseModel
 
 import lima_api
 from lima_api import LimaException
 from lima_api.parameters import BodyParameter
+
+
+class ExampleQuery(BaseModel):
+    page: Optional[int] = None
+    size: Optional[int] = None
+    search: Optional[str] = None
+
+
+class QueryModelDumpClient(lima_api.SyncLimaApi):
+    @lima_api.get("/")
+    def search_dict(
+        self,
+        *,
+        query: ExampleQuery = lima_api.QueryParameter(model_dump_mode=lima_api.parameters.DumpMode.DICT),
+        extra: str = "extra",
+    ) -> None: ...
+
+    @lima_api.get("/")
+    def search_dict_none(
+        self,
+        *,
+        query: ExampleQuery = lima_api.QueryParameter(model_dump_mode=lima_api.parameters.DumpMode.DICT_NONE),
+        extra: str = "extra",
+    ) -> None: ...
+
+    @lima_api.get("/")
+    def search_json(
+        self,
+        *,
+        query: ExampleQuery = lima_api.QueryParameter(model_dump_mode=lima_api.parameters.DumpMode.JSON),
+        extra: str = "extra",
+    ) -> None: ...
+
+    @lima_api.get("/")
+    def search_json_none(
+        self,
+        *,
+        query: ExampleQuery = lima_api.QueryParameter(model_dump_mode=lima_api.parameters.DumpMode.JSON_NONE),
+        extra: str = "extra",
+    ) -> None: ...
+
+
+class TestModelDump:
+    def setup_method(self):
+        self.client = QueryModelDumpClient(base_url="http://localhost:8080", auto_start=True, auto_close=True)
+
+    @pytest.mark.parametrize(
+        "function_name,query,expected",
+        [
+            pytest.param(
+                "search_dict",
+                ExampleQuery(page=0, search=""),
+                {"page": 0, "search": "", "extra": "extra"},
+            ),
+            pytest.param(
+                "search_dict_none",
+                ExampleQuery(page=0, search=""),
+                {"page": 0, "search": "", "extra": "extra", "size": None},
+            ),
+        ],
+    )
+    def test_model_dump_mode_dict(self, mocker, function_name: str, query, expected) -> None:
+        client_mock = mocker.patch("httpx.Client").return_value.__enter__
+        client_mock.return_value.send.return_value.status_code = 200
+        client_mock.return_value.send.return_value.content = b""
+        function = getattr(self.client, function_name)
+        function(query=query)
+
+        request_kwargs = client_mock.return_value.build_request.call_args.kwargs
+        assert "params" in request_kwargs
+        assert request_kwargs["params"] == expected
+
+    @pytest.mark.parametrize(
+        "function_name,query,expected",
+        [
+            pytest.param(
+                "search_json",
+                ExampleQuery(page=0, search=""),
+                {"page": 0, "search": ""},
+            ),
+            pytest.param(
+                "search_json_none",
+                ExampleQuery(page=0, search=""),
+                {"page": 0, "size": None, "search": ""},
+            ),
+        ],
+    )
+    def test_model_dump_mode_json(self, mocker, function_name: str, query, expected) -> None:
+        client_mock = mocker.patch("httpx.Client").return_value.__enter__
+        client_mock.return_value.send.return_value.status_code = 200
+        client_mock.return_value.send.return_value.content = b""
+        function = getattr(self.client, function_name)
+        function(query=query)
+
+        request_kwargs = client_mock.return_value.build_request.call_args.kwargs
+        assert "params" in request_kwargs
+        assert "extra" in request_kwargs["params"]
+        assert request_kwargs["params"]["extra"] == "extra"
+        assert "query" in request_kwargs["params"]
+        assert json.loads(request_kwargs["params"]["query"]) == expected
 
 
 class TestLimaParameters:

@@ -11,7 +11,7 @@ else:  # pragma: no cover
 class LimaSettings(BaseSettings):
     lima_bracket_regex: str = r"\{(.+?)\}"
     lima_default_http_retries: int = 0
-    lima_default_http_timeout: int = 15
+    lima_default_http_timeout: float = 15
     lima_default_response_code: int = 200
     lima_retry_after_max_retries: int = 5
     lima_retry_after_min_sleep_sec: int = 5
