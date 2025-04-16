@@ -194,6 +194,15 @@ class TestLimaParameters:
 
         assert exc_info.value.detail == "path parameters need to be defined: <missing>"
 
+    def test_get_missing_return(self):
+        with pytest.raises(TypeError) as exc_info:
+
+            class SyncClient(lima_api.SyncLimaApi):
+                @lima_api.get("/no_return")
+                def sync_no_return(self): ...
+
+        assert exc_info.value.args == ("Required return type",)
+
     def test_get_path(self, mocker):
         client_mock = self._mock_request(mocker)
 

@@ -666,6 +666,8 @@ def method_factory(method):
         def _http_method(func: OriginalFunc) -> DecoratedFunc:
             sig: Signature = inspect.signature(func)
             return_class = sig.return_annotation
+            if return_class is inspect.Signature.empty:
+                raise TypeError("Required return type")
             is_async = inspect.iscoroutinefunction(func)
             (
                 query_params_mapping,
