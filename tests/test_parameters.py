@@ -201,7 +201,7 @@ class TestLimaParameters:
                 @lima_api.get("/no_return")
                 def sync_no_return(self): ...
 
-        assert exc_info.value.args == ("Required return type", )
+        assert exc_info.value.args == ("Required return type",)
 
     def test_get_path(self, mocker):
         client_mock = self._mock_request(mocker)
