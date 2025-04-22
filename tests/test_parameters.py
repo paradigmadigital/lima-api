@@ -8,6 +8,7 @@ import pytest
 from client import (
     GenericError,
     Item,
+    KwargsSyncClient,
     ResumeUrl,
     SyncClient,
 )
@@ -559,3 +560,103 @@ class TestLimaParameters:
                 response = client.sync_pipe_optional()
 
             assert response == {"test": "test"}
+
+
+class TestLimaKwargsParameters:
+    def setup_method(self):
+        self.client = KwargsSyncClient(base_url="http://localhost")
+
+    def _mock_request(self, mocker, status_code: int = 200, content: str = ""):
+        client_mock = mocker.patch("httpx.Client").return_value.__enter__
+        client_mock.return_value.send.return_value.status_code = status_code
+        client_mock.return_value.send.return_value.content = content
+        return client_mock
+
+    def test_get_exclude_kwargs(self, mocker):
+        client_mock = self._mock_request(mocker)
+        with self.client as client:
+            client.get_exclude_kwargs(test_param="test")
+        request_kwargs = client_mock.return_value.build_request.call_args.kwargs
+        assert "params" in request_kwargs
+        assert request_kwargs["params"] == {}
+
+    def test_get_send_query_kwargs(self, mocker):
+        client_mock = self._mock_request(mocker)
+        with self.client as client:
+            client.get_send_query_kwargs(test_param="test")
+        request_kwargs = client_mock.return_value.build_request.call_args.kwargs
+        assert "params" in request_kwargs
+        assert request_kwargs["params"] == {"test_param": "test"}
+
+    def test_get_send_body_kwargs(self, mocker):
+        client_mock = self._mock_request(mocker)
+        with self.client as client:
+            client.get_send_body_kwargs(test_param="test")
+        request_kwargs = client_mock.return_value.build_request.call_args.kwargs
+        assert "params" in request_kwargs
+        assert request_kwargs["params"] == {"test_param": "test"}
+        assert "data" not in request_kwargs
+
+    def test_post_exclude_kwargs(self, mocker):
+        client_mock = self._mock_request(mocker)
+        with self.client as client:
+            client.post_exclude_kwargs(test_param="test")
+        request_kwargs = client_mock.return_value.build_request.call_args.kwargs
+        assert "params" in request_kwargs
+        assert request_kwargs["params"] == {}
+
+    def test_post_send_query_kwargs(self, mocker):
+        client_mock = self._mock_request(mocker)
+        with self.client as client:
+            client.post_send_query_kwargs(test_param="test")
+        request_kwargs = client_mock.return_value.build_request.call_args.kwargs
+        assert "params" in request_kwargs
+        assert request_kwargs["params"] == {"test_param": "test"}
+
+    def test_post_send_body_kwargs(self, mocker):
+        client_mock = self._mock_request(mocker)
+        with self.client as client:
+            client.post_send_body_kwargs(test_param="test")
+        request_kwargs = client_mock.return_value.build_request.call_args.kwargs
+        assert "data" in request_kwargs
+        assert request_kwargs["data"] == {"test_param": "test"}
+
+    def test_post_send_json_kwargs(self, mocker):
+        client_mock = self._mock_request(mocker)
+        with self.client as client:
+            client.post_send_json_kwargs(test_param="test")
+        request_kwargs = client_mock.return_value.build_request.call_args.kwargs
+        assert "json" in request_kwargs
+        assert request_kwargs["json"] == {"test_param": "test"}
+
+    def test_post_send_query_kwargs_with_args(self, mocker):
+        client_mock = self._mock_request(mocker)
+        with self.client as client:
+            client.post_send_query_kwargs_with_args(test_param="test")
+        request_kwargs = client_mock.return_value.build_request.call_args.kwargs
+        assert "params" in request_kwargs
+        assert request_kwargs["params"] == {"test_param": "test", "query": "test"}
+
+    def test_post_send_query_kwargs_with_model_args(self, mocker):
+        client_mock = self._mock_request(mocker)
+        with self.client as client:
+            client.post_send_query_kwargs_with_model_args(body=Item(id=2, name="name"), test_param="test")
+        request_kwargs = client_mock.return_value.build_request.call_args.kwargs
+        assert "json" in request_kwargs
+        assert request_kwargs["json"] == {"id": 2, "name": "name"}
+        assert "params" in request_kwargs
+        assert request_kwargs["params"] == {"test_param": "test", "query": "test"}
+
+    def test_post_send_body_kwargs_with_model_args(self, mocker):
+        client_mock = self._mock_request(mocker)
+        with self.client as client:
+            client.post_send_body_kwargs_with_model_args(
+                body=Item(id=2, name="name"),
+                test_param="test",
+                name="ignored",
+            )
+        request_kwargs = client_mock.return_value.build_request.call_args.kwargs
+        assert "json" in request_kwargs
+        assert request_kwargs["json"] == {"id": 2, "name": "name", "test_param": "test"}
+        assert "params" in request_kwargs
+        assert request_kwargs["params"] == {"query": "test"}

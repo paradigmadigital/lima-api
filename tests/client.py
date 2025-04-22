@@ -77,6 +77,59 @@ class AsyncClient(lima_api.LimaApi):
     async def async_list(self, *, limit: int = lima_api.QueryParameter(default=100)) -> list[Item]: ...
 
 
+class KwargsSyncClient(lima_api.SyncLimaApi):
+    @lima_api.get("/")
+    def get_exclude_kwargs(self, **kwargs) -> None: ...
+
+    @lima_api.get("/", kwargs_mode="query")
+    def get_send_query_kwargs(self, **kwargs) -> None: ...
+
+    @lima_api.get("/", kwargs_mode="body")
+    def get_send_body_kwargs(self, **kwargs) -> None: ...
+
+    @lima_api.post("/")
+    def post_exclude_kwargs(self, **kwargs) -> None: ...
+
+    @lima_api.post("/", kwargs_mode="query")
+    def post_send_query_kwargs(self, **kwargs) -> None: ...
+
+    @lima_api.post("/", kwargs_mode="body")
+    def post_send_json_kwargs(self, **kwargs) -> None: ...
+
+    @lima_api.post(
+        "/",
+        headers={"content-type": "application/x-www-form-urlencoded"},
+        kwargs_mode="body",
+    )
+    def post_send_body_kwargs(self, **kwargs) -> None: ...
+
+    @lima_api.post("/", kwargs_mode="query")
+    def post_send_query_kwargs_with_args(
+        self,
+        *,
+        query: str = lima_api.QueryParameter(default="test"),
+        **kwargs,
+    ) -> None: ...
+
+    @lima_api.post("/", kwargs_mode="query")
+    def post_send_query_kwargs_with_model_args(
+        self,
+        *,
+        body: Item,
+        query: str = lima_api.QueryParameter(default="test"),
+        **kwargs,
+    ) -> None: ...
+
+    @lima_api.post("/", kwargs_mode="body")
+    def post_send_body_kwargs_with_model_args(
+        self,
+        *,
+        body: Item,
+        query: str = lima_api.QueryParameter(default="test"),
+        **kwargs,
+    ) -> None: ...
+
+
 class SyncClient(lima_api.SyncLimaApi):
     retry_mapping = {httpx.codes.UNAUTHORIZED: AutoLoginProcessor}
 

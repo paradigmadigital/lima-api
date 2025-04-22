@@ -1,14 +1,6 @@
-from enum import Enum
-
 from pydantic.fields import FieldInfo
 
-
-class Location(str, Enum):
-    PATH = "PATH"
-    QUERY = "QUERY"
-    BODY = "BODY"
-    HEADER = "HEADER"
-    FILE = "FILE"
+from lima_api.constants import DumpMode, Location
 
 
 class LimaParameter(FieldInfo):
@@ -24,13 +16,6 @@ class LimaParameter(FieldInfo):
 class PathParameter(LimaParameter):
     def __init__(self, **kwargs):
         super().__init__(Location.PATH, **kwargs)
-
-
-class DumpMode(str, Enum):
-    DICT = "dict"
-    DICT_NONE = "dict_none"
-    JSON = "json"
-    JSON_NONE = "json_none"
 
 
 class QueryParameter(LimaParameter):
