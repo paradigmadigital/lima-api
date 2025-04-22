@@ -188,7 +188,9 @@ class LimaApiBase:
                 if body is None:
                     body = body_kwargs
                 elif isinstance(body, dict):
-                    body.update({k: v for k, v in body_kwargs.items() if k not in body and k not in body_mapping["kwargs_name"]})
+                    body.update(
+                        {k: v for k, v in body_kwargs.items() if k not in body and k not in body_mapping["kwargs_name"]}
+                    )
             elif kwargs_mode == KwargsMode.QUERY:
                 params.update(
                     {k: v for k, v in body_kwargs.items() if not body_mapping or k not in body_mapping["kwargs_name"]}
