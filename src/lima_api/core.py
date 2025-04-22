@@ -6,6 +6,8 @@ from enum import Enum
 from inspect import Signature
 from threading import Lock
 
+from .constants import KwargsMode
+
 try:
     from types import NoneType
 except ImportError:  # pragma: no cover
@@ -154,6 +156,7 @@ class LimaApiBase:
         undefined_values: Optional[tuple[Any, ...]] = None,
         headers: Optional[dict[str, str]] = None,
         timeout: Optional[float] = None,
+        kwargs_mode: KwargsMode = KwargsMode.IGNORE,
     ) -> httpx.Request:
         if self.client is None:
             raise LimaException(detail="uninitialized client")
@@ -181,6 +184,17 @@ class LimaApiBase:
         body_kwargs = {k: v for k, v in kwargs.items() if k not in used_params}
         try:
             body = get_body(body_mapping=body_mapping, kwargs=body_kwargs)
+            if kwargs_mode == KwargsMode.BODY:
+                if body is None:
+                    body = body_kwargs
+                elif isinstance(body, dict):
+                    body.update(
+                        {k: v for k, v in body_kwargs.items() if k not in body and k not in body_mapping["kwargs_name"]}
+                    )
+            elif kwargs_mode == KwargsMode.QUERY:
+                params.update(
+                    {k: v for k, v in body_kwargs.items() if not body_mapping or k not in body_mapping["kwargs_name"]}
+                )
         except pydantic.ValidationError as ex:
             raise self.validation_exception("Invalid body") from ex
         final_url = get_final_url(
@@ -346,6 +360,7 @@ class LimaApi(LimaApiBase):
         default_exception: Optional[type[LimaException]] = None,
         send_kwargs: Optional[dict] = None,
         retry_mapping: Optional[dict[Union[httpx.codes, int, None], type[LimaRetryProcessor]]] = None,
+        kwargs_mode: KwargsMode = KwargsMode.IGNORE,
     ) -> Any:
         do_request = True
         if retry_mapping is None:
@@ -371,6 +386,7 @@ class LimaApi(LimaApiBase):
                     default_response_code=default_response_code,
                     default_exception=default_exception,
                     send_kwargs=send_kwargs,
+                    kwargs_mode=kwargs_mode,
                 )
                 return response
             except LimaException as ex:
@@ -410,6 +426,7 @@ class LimaApi(LimaApiBase):
         default_response_code: Optional[Union[httpx.codes, int]] = None,
         default_exception: Optional[type[LimaException]] = None,
         send_kwargs: Optional[dict] = None,
+        kwargs_mode: KwargsMode = KwargsMode.IGNORE,
     ) -> Any:
         if send_kwargs is None:
             send_kwargs = self.default_send_kwargs
@@ -435,6 +452,7 @@ class LimaApi(LimaApiBase):
                 undefined_values=undefined_values,
                 headers=headers,
                 timeout=timeout,
+                kwargs_mode=kwargs_mode,
             )
 
             self.log(
@@ -527,6 +545,7 @@ class SyncLimaApi(LimaApiBase):
         default_exception: Optional[type[LimaException]] = None,
         send_kwargs: Optional[dict] = None,
         retry_mapping: Optional[dict[Union[httpx.codes, int, None], type[LimaRetryProcessor]]] = None,
+        kwargs_mode: KwargsMode = KwargsMode.IGNORE,
     ) -> Any:
         do_request = True
         if retry_mapping is None:
@@ -552,6 +571,7 @@ class SyncLimaApi(LimaApiBase):
                     default_response_code=default_response_code,
                     default_exception=default_exception,
                     send_kwargs=send_kwargs,
+                    kwargs_mode=kwargs_mode,
                 )
                 return response
             except LimaException as ex:
@@ -589,6 +609,7 @@ class SyncLimaApi(LimaApiBase):
         default_response_code: Optional[Union[httpx.codes, int]] = None,
         default_exception: Optional[type[LimaException]] = None,
         send_kwargs: Optional[dict] = None,
+        kwargs_mode: KwargsMode = KwargsMode.IGNORE,
     ) -> Any:
         if send_kwargs is None:
             send_kwargs = self.default_send_kwargs
@@ -615,6 +636,7 @@ class SyncLimaApi(LimaApiBase):
                 undefined_values=undefined_values,
                 headers=headers,
                 timeout=timeout,
+                kwargs_mode=kwargs_mode,
             )
 
             self.log(
@@ -660,8 +682,12 @@ def method_factory(method):
         headers: Optional[dict[str, str]] = None,
         default_exception: Optional[type[LimaException]] = None,
         retry_mapping: Optional[dict[Union[httpx.codes, int, None], type[LimaRetryProcessor]]] = None,
+        kwargs_mode: KwargsMode = KwargsMode.IGNORE,
     ) -> Callable:
         path = path.replace(" ", "")
+
+        if method == "GET" and kwargs_mode != KwargsMode.IGNORE:
+            kwargs_mode = KwargsMode.QUERY
 
         def _http_method(func: OriginalFunc) -> DecoratedFunc:
             sig: Signature = inspect.signature(func)
@@ -698,6 +724,7 @@ def method_factory(method):
                         default_response_code=default_response_code,
                         default_exception=default_exception,
                         retry_mapping=retry_mapping,
+                        kwargs_mode=kwargs_mode,
                     )
             else:
 
@@ -723,6 +750,7 @@ def method_factory(method):
                         default_response_code=default_response_code,
                         default_exception=default_exception,
                         retry_mapping=retry_mapping,
+                        kwargs_mode=kwargs_mode,
                     )
 
             return _func
