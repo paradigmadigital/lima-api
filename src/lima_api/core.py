@@ -131,7 +131,11 @@ class LimaApiBase:
         self.transport: Optional[Union[SyncOpenTelemetryTransport, AsyncOpenTelemetryTransport]] = None
         self.client: Optional[Union[httpx.Client, httpx.AsyncClient]] = None
         self.client_kwargs.update(client_kwargs or {})
-        self.auto_start = auto_start
+        self._auto_start: bool = auto_start
+
+    @property
+    def auto_start(self) -> bool:
+        return self._auto_start
 
     def log(self, *, event: LogEvent, **kwargs) -> None:
         """
@@ -483,12 +487,8 @@ class LimaApi(LimaApiBase):
 
 class SyncLimaApi(LimaApiBase):
     def __init__(self, *args, auto_close: bool = True, **kwargs):
-        self.auto_close: bool = auto_close and kwargs.get("auto_start", False)
+        self._auto_close: bool = auto_close and kwargs.get("auto_start", False)
         super().__init__(*args, **kwargs)
-        if not kwargs.get("auto_start", False) and self.auto_close:
-            msg = "auto_close not allowed with auto_start=False"
-            logging.warning(msg)
-            self.log(event=LogEvent.SETUP, msg=msg)
         transport = httpx.HTTPTransport(retries=self.retries)
         self.transport: SyncOpenTelemetryTransport = SyncOpenTelemetryTransport(transport)
         self.client: Optional[httpx.Client] = None
@@ -498,6 +498,15 @@ class SyncLimaApi(LimaApiBase):
     def __del__(self):
         if self.client:
             self.__exit__(None, None, None)
+
+    @property
+    def auto_close(self) -> bool:
+        if self._auto_close and not self.auto_start:
+            msg = "auto_close not allowed with auto_start=False, setting off"
+            logging.warning(msg)
+            self.log(event=LogEvent.SETUP, msg=msg)
+            self._auto_close = False
+        return self._auto_close
 
     def start_client(self) -> None:
         client_kwargs = self.client_kwargs.copy()
