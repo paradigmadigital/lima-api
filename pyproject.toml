@@ -40,13 +40,6 @@ lima-generator = "lima_api.code_generator.main:main"
 where = ["./src"]
 
 [project.optional-dependencies]
-docs = [
-    "sphinx",
-    "myst-parser",
-    "sphinx_design",
-    "sphinx-autodoc2",
-    "pydata-sphinx-theme",
-]
 test = [
     "coverage",
     "pytest",
@@ -66,7 +59,7 @@ pydantic1 = [
     "pydantic[email]>=1.10,<2.0",
 ]
 all = [
-    "lima-api[test,pydantic2,docs]",
+    "lima-api[test,pydantic2]",
 ]
 
 [tool.ruff]

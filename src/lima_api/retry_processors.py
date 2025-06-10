@@ -11,11 +11,6 @@ from lima_api.core import LimaApi, LimaRetryProcessor, LogEvent, SyncLimaApi
 
 
 class RetryAfterProcessor(LimaRetryProcessor):
-    """
-    This processor search the header
-    [`Retry-After`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Retry-After)
-    in the response and wait the time required.
-    """
     # https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Date
     HTTP_DATE = "%a, %d %b %Y %H:%M:%S %Z"
     max_retry = settings.lima_retry_after_max_retries
@@ -56,9 +51,7 @@ class RetryAfterProcessor(LimaRetryProcessor):
 
 class AutoLoginProcessor(LimaRetryProcessor):
     """
-    This processor will call to `autologin` client function if the function exists.
-
-    When `client.autologin() -> bool` is called and the retry will depend on the result.
+    Will call to `client.autologin() -> bool` and retry based on the result
     """
 
     max_retry = settings.lima_autologin_max_retries
