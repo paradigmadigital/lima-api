@@ -46,16 +46,43 @@ DEFAULT_UNDEFINED_VALUES: tuple[Any, ...] = (None, "")
 
 class LogEvent(str, Enum):
     START_CLIENT = "start_client"
+    """
+    """
     BUILD_REQUEST = "build_request"
+    """
+    """
     SEND_REQUEST = "send_request"
+    """
+    """
     RECEIVED_RESPONSE = "received_response"
+    """
+    """
     STOP_CLIENT = "stop_client"
+    """
+    """
     SETUP = "setup"
+    """
+    """
     RETRY = "retry"
+    """
+    """
 
 
 class LimaRetryProcessor:
+    """
+    ```{versionadded} 1.4.0
+    Support for retry when exceptions are raised
+    ```
+
+    All retry processors must be instanced of `lima_api.core.LimaRetryProcessor`.
+
+    That processors allow is adding automatic actions for your failed request,
+    in order to you could fix the issue and retry.
+    """
     max_retry: int = 1
+    """
+    Max number of retries before raise the exception.
+    """
 
     def __init__(self):
         self.retry_count: int = 0
@@ -63,14 +90,20 @@ class LimaRetryProcessor:
     def do_retry(self, client: Union["LimaApi", "SyncLimaApi"], exception: LimaException) -> bool:
         """
         Check before call process.
+
+        Increment the `self.retry_count` counter.
+
         In case that False is returned `self.process` never will call
-        and request will not be retried,
+        and request will not be retried.
         """
         self.retry_count += 1
         return self.retry_count <= self.max_retry
 
     async def process(self, client: "LimaApi", exception: LimaException) -> bool:  # pragma: no cover
         """
+        Only called in async clients.
+        In sync clients process must be made on the `self.do_retry` method.
+
         Do the process required and return `True` if you want retry.
         """
         return True
@@ -78,17 +111,63 @@ class LimaRetryProcessor:
 
 class LimaApiBase:
     base_url: str
+    """
+    Base url to compose the final path.
+    Will be overridden the constructor.
+    """
     headers: dict[str, str]
+    """
+    The value of headers for httpx.Client/httpx.AsyncClient build_request function for send in each request.
+    Will be updated by the constructor and/or decorator.
+    """
     response_mapping: dict[Union[httpx.codes, int], type[LimaException]]
+    """
+    Dict with response code as key and lima exception as value.
+    Will be updated by the constructor and/or decorator.
+    """
     retry_mapping: dict[Union[httpx.codes, int, None], type[LimaRetryProcessor]] = {}
+    """
+    Mapping that define the retry processor class used depending of the http status.
+    Will be updated by the decorator.
+    """
     client_kwargs: dict
+    """
+    Dict with kwargs to pass to httpx.Client/httpx.AsyncClient
+    Will be overridden the constructor.
+    """
     retries: int = DEFAULT_HTTP_RETRIES
+    """
+    The maximum number of retries when trying to establish a connection.
+    Will be updated by the constructor and/or decorator.
+    """
     timeout: float = DEFAULT_HTTP_TIMEOUT
+    """
+    httpx.Client/httpx.AsyncClient timeout value.
+    Will be updated by the constructor and/or decorator.
+    """
     default_response_code: Union[httpx.codes, int] = DEFAULT_RESPONSE_CODE
+    """
+    Expected response code.
+    Will be updated by the constructor and/or decorator.
+    """
     undefined_values: tuple[Any, ...] = DEFAULT_UNDEFINED_VALUES
+    """
+    List of values that indicate undefined behavior
+    Will be updated by the constructor and/or decorator.
+    """
     default_exception: type[LimaException] = LimaException
+    """
+    LimaException class to raise if response code is not on response_mapping
+    Will be updated by the constructor and/or decorator.
+    """
     validation_exception: type[ValidationError] = ValidationError
+    """
+    ValidationError class to raise if response don't match with the expected model.
+    """
     default_send_kwargs: dict[str, Any] = {"follow_redirects": True}
+    """
+    Extra kwargs send on `self.client.send` for each request.
+    """
 
     def __new__(cls, *args, **kwargs):
         new_class = super().__new__(cls)
@@ -709,6 +788,18 @@ def method_factory(method):
         retry_mapping: Optional[dict[Union[httpx.codes, int, None], type[LimaRetryProcessor]]] = None,
         kwargs_mode: KwargsMode = KwargsMode.IGNORE,
     ) -> Callable:
+        """
+        :param path:
+        :param timeout:
+        :param default_response_code:
+        :param response_mapping:
+        :param undefined_values:
+        :param headers:
+        :param default_exception:
+        :param retry_mapping:
+        :param kwargs_mode:
+        :return:
+        """
         path = path.replace(" ", "")
 
         if method == "GET" and kwargs_mode != KwargsMode.IGNORE:
