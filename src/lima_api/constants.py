@@ -2,6 +2,9 @@ from enum import Enum
 
 
 class Location(str, Enum):
+    """
+    Enum that indicate the location of data.
+    """
     PATH = "PATH"
     QUERY = "QUERY"
     BODY = "BODY"
@@ -10,6 +13,9 @@ class Location(str, Enum):
 
 
 class DumpMode(str, Enum):
+    """
+    Enum that indicate how dump the data.
+    """
     DICT = "dict"
     DICT_NONE = "dict_none"
     JSON = "json"
@@ -17,6 +23,9 @@ class DumpMode(str, Enum):
 
 
 class KwargsMode(str, Enum):
+    """
+    Enum that indicate how manage the kwargs that are not defined.
+    """
     IGNORE = "ignore"
     QUERY = "query"
     BODY = "body"

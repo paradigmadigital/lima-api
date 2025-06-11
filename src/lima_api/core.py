@@ -257,6 +257,24 @@ class LimaApiBase:
         timeout: Optional[float] = None,
         kwargs_mode: KwargsMode = KwargsMode.IGNORE,
     ) -> httpx.Request:
+        """
+        Create a `httpx` request to send.
+
+        :param sync: if the request should be sent synchronously or asynchronously
+        :param method: the method of the request
+        :param path: the path of the request. It may contain path parameters.
+        :param path_params_mapping: the mapping for the path parameters
+        :param kwargs: the keyword arguments passed into the lima function that will be used to generate the proper request
+        :param body_mapping: the mapping used for generate the body of the request
+        :param file_mapping: the mapping used for generate the files of the request
+        :param query_params_mapping: the mapping used for generate the query parameters of the request
+        :param header_mapping: the mapping used for generate the headers of the request
+        :param undefined_values: the values that are considered undefined
+        :param headers: the headers of the request
+        :param timeout: the timeout of the request
+        :param kwargs_mode: how the kwargs that are not defined in the mappings are used to fill the request
+        :return: an instance of `httpx.Request`
+        """
         if self.client is None:
             raise LimaException(detail="uninitialized client")
 
@@ -361,7 +379,18 @@ class LimaApiBase:
         response_mapping: Optional[dict[Union[httpx.codes, int], type[LimaException]]] = None,
         default_response_code: Optional[Union[httpx.codes, int]] = None,
         default_exception: Optional[type[LimaException]] = None,
-    ):
+    ) -> Any:
+        """
+        Create a response object from an httpx.Response
+
+        :param api_response: httpx.Response object
+        :param return_class: class of the response object
+        :param response_mapping: dict with response code as key and lima exception as value
+        :param default_response_code: expected response code
+        :param default_exception: LimaException class to raise if response code is not on response_mapping
+        :return: response object
+        :raises LimaException: if response code is not on response_mapping or if the response body could not be parsed
+        """
         mapping = self.response_mapping
         if response_mapping:
             mapping = self.response_mapping.copy()
@@ -461,6 +490,33 @@ class LimaApi(LimaApiBase):
         retry_mapping: Optional[dict[Union[httpx.codes, int, None], type[LimaRetryProcessor]]] = None,
         kwargs_mode: KwargsMode = KwargsMode.IGNORE,
     ) -> Any:
+        """
+        Make a request to the server.
+
+        This method will make a request to the server and return the response.
+        It will handle the retry logic according to the retry mapping.
+
+        :param sync: if the request should be sent synchronously or asynchronously
+        :param method: the method of the request
+        :param path: the path of the request. It may contain path parameters.
+        :param path_params_mapping: the mapping for the path parameters
+        :param kwargs: the keyword arguments of the function that will be used to generate the proper request
+        :param return_class: the class that will be used to create the response object
+        :param body_mapping: the mapping used for generate the body of the request
+        :param file_mapping: the mapping used for generate the files of the request
+        :param query_params_mapping: the mapping used for generate the query parameters of the request
+        :param header_mapping: the mapping used for generate the headers of the request
+        :param undefined_values: the values that are considered undefined
+        :param headers: the headers of the request
+        :param timeout: the timeout of the request
+        :param response_mapping: the mapping used to know which exception to raise for each status code
+        :param default_response_code: the default status code to use when the status code is not in the response mapping
+        :param default_exception: the default exception to raise when the status code is not in the response mapping
+        :param send_kwargs: the keyword arguments passed into the `client.send` method
+        :param retry_mapping: the mapping used to know which retry processor to use for each status code
+        :param kwargs_mode: how the kwargs that are not defined in the mappings are used to fill the request
+        :return: the response object
+        """
         do_request = True
         if retry_mapping is None:
             retry_mapping = {}
@@ -527,6 +583,34 @@ class LimaApi(LimaApiBase):
         send_kwargs: Optional[dict] = None,
         kwargs_mode: KwargsMode = KwargsMode.IGNORE,
     ) -> Any:
+        """
+        Send an HTTP request and return the response.
+
+        This method constructs an HTTP request using the provided parameters,
+        sends it, and processes the response. It handles automatic retries and exceptions.
+
+        :param sync: Whether the request should be sent synchronously or asynchronously.
+        :param method: The HTTP method to use for the request (e.g., 'GET', 'POST').
+        :param path: The URL path for the request, which may include path parameters.
+        :param path_params_mapping: Mapping for path parameters used in the request URL.
+        :param kwargs: Additional keyword arguments for constructing the request.
+        :param return_class: The class type to use for the response object.
+        :param body_mapping: Mapping used to generate the request body.
+        :param file_mapping: Mapping used to generate files for the request.
+        :param query_params_mapping: Mapping used to generate query parameters.
+        :param header_mapping: Mapping used to generate request headers.
+        :param undefined_values: Values considered undefined and to be ignored.
+        :param headers: Additional headers for the request.
+        :param timeout: Timeout for the request in seconds.
+        :param response_mapping: Mapping to determine which exception to raise for each status code.
+        :param default_response_code: Default status code expected in the response.
+        :param default_exception: Default exception to raise if the status code is not in the mapping.
+        :param send_kwargs: Additional keyword arguments for the `client.send` method.
+        :param kwargs_mode: Specifies how undefined kwargs are processed.
+        :return: An instance of the response class specified by `return_class`.
+        :raises LimaException: If there is a connection error or if the response code
+                               is not in the response mapping.
+        """
         if send_kwargs is None:
             send_kwargs = self.default_send_kwargs
 
@@ -651,6 +735,33 @@ class SyncLimaApi(LimaApiBase):
         retry_mapping: Optional[dict[Union[httpx.codes, int, None], type[LimaRetryProcessor]]] = None,
         kwargs_mode: KwargsMode = KwargsMode.IGNORE,
     ) -> Any:
+        """
+        Make a request to the server.
+
+        This method will make a request to the server and return the response.
+        It will handle the retry logic according to the retry mapping.
+
+        :param sync: if the request should be sent synchronously or asynchronously
+        :param method: the method of the request
+        :param path: the path of the request. It may contain path parameters.
+        :param path_params_mapping: the mapping for the path parameters
+        :param kwargs: the keyword arguments of the function that will be used to generate the proper request
+        :param return_class: the class that will be used to create the response object
+        :param body_mapping: the mapping used for generate the body of the request
+        :param file_mapping: the mapping used for generate the files of the request
+        :param query_params_mapping: the mapping used for generate the query parameters of the request
+        :param header_mapping: the mapping used for generate the headers of the request
+        :param undefined_values: the values that are considered undefined
+        :param headers: the headers of the request
+        :param timeout: the timeout of the request
+        :param response_mapping: the mapping used to know which exception to raise for each status code
+        :param default_response_code: the default status code to use when the status code is not in the response mapping
+        :param default_exception: the default exception to raise when the status code is not in the response mapping
+        :param send_kwargs: the keyword arguments passed into the `client.send` method
+        :param retry_mapping: the mapping used to know which retry processor to use for each status code
+        :param kwargs_mode: how the kwargs that are not defined in the mappings are used to fill the request
+        :return: the response object
+        """
         do_request = True
         if retry_mapping is None:
             retry_mapping = {}
@@ -715,6 +826,34 @@ class SyncLimaApi(LimaApiBase):
         send_kwargs: Optional[dict] = None,
         kwargs_mode: KwargsMode = KwargsMode.IGNORE,
     ) -> Any:
+        """
+        Send an HTTP request and return the response.
+
+        This method constructs an HTTP request using the provided parameters,
+        sends it, and processes the response. It handles automatic retries and exceptions.
+
+        :param sync: Whether the request should be sent synchronously or asynchronously.
+        :param method: The HTTP method to use for the request (e.g., 'GET', 'POST').
+        :param path: The URL path for the request, which may include path parameters.
+        :param path_params_mapping: Mapping for path parameters used in the request URL.
+        :param kwargs: Additional keyword arguments for constructing the request.
+        :param return_class: The class type to use for the response object.
+        :param body_mapping: Mapping used to generate the request body.
+        :param file_mapping: Mapping used to generate files for the request.
+        :param query_params_mapping: Mapping used to generate query parameters.
+        :param header_mapping: Mapping used to generate request headers.
+        :param undefined_values: Values considered undefined and to be ignored.
+        :param headers: Additional headers for the request.
+        :param timeout: Timeout for the request in seconds.
+        :param response_mapping: Mapping to determine which exception to raise for each status code.
+        :param default_response_code: Default status code expected in the response.
+        :param default_exception: Default exception to raise if the status code is not in the mapping.
+        :param send_kwargs: Additional keyword arguments for the `client.send` method.
+        :param kwargs_mode: Specifies how undefined kwargs are processed.
+        :return: An instance of the response class specified by `return_class`.
+        :raises LimaException: If there is a connection error or if the response code
+                               is not in the response mapping.
+        """
         if send_kwargs is None:
             send_kwargs = self.default_send_kwargs
         if self.auto_close:
@@ -789,16 +928,16 @@ def method_factory(method):
         kwargs_mode: KwargsMode = KwargsMode.IGNORE,
     ) -> Callable:
         """
-        :param path:
-        :param timeout:
-        :param default_response_code:
-        :param response_mapping:
-        :param undefined_values:
-        :param headers:
-        :param default_exception:
-        :param retry_mapping:
-        :param kwargs_mode:
-        :return:
+        :param path: The URL path for the request, which may include path parameters.
+        :param timeout: Timeout for the request in seconds.
+        :param default_response_code: Default status code expected in the response.
+        :param response_mapping: Mapping to determine which exception to raise for each status code.
+        :param default_response_code: Default status code expected in the response.
+        :param headers: Additional headers for the request.
+        :param default_exception: Default exception to raise if the status code is not in the mapping.
+        :param retry_mapping: the mapping used to know which retry processor to use for each status code
+        :param kwargs_mode: Specifies how undefined kwargs are processed.
+        :return: An instance of the response class specified by function.
         """
         path = path.replace(" ", "")
 
