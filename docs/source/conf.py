@@ -17,13 +17,16 @@ html_short_title = 'lima-api'
 #html_favicon = '_static/favicon.svg'
 
 sys.path.append(os.path.abspath('.'))
+sys.path.insert(0, os.path.abspath('../../src'))
 
 # -- Get version information from Git -----------------------------------------
 
 try:
     from subprocess import check_output
+    import re
     release = check_output(['git', 'describe', '--tags', '--always'])
     release = release.decode().strip()
+    release = re.compile("\d+\.\d+.\d+").search(release).group(0)
 except Exception:
     release = '<unknown>'
 
@@ -33,22 +36,36 @@ except Exception:
 extensions = [
     "myst_parser",
     "sphinx_design",
-    "autodoc2",
+    "sphinx.ext.autodoc",
+    "sphinx.ext.viewcode",
+    "sphinx.ext.napoleon",
 ]
 source_suffix = '.md'
-autoapi_dirs = [
-    '../../src',
-    '../../'
-]
-autodoc2_packages = [
-    {
-        "path": "../../src/lima_api",
-        "auto_mode": True,
-    },
-]
-autodoc2_docstring_parser_regexes = [
-    (r".*", "myst"),
-]
+
+# Configuración para autodoc (reemplaza autodoc2)
+autodoc_default_options = {
+    'members': True,
+    'member-order': 'bysource',
+    'special-members': '__init__',
+    'undoc-members': True,
+    'exclude-members': '__weakref__'
+}
+
+# Configuración para Napoleon
+napoleon_google_docstring = True
+napoleon_numpy_docstring = True
+napoleon_include_init_with_doc = False
+napoleon_include_private_with_doc = False
+napoleon_include_special_with_doc = True
+napoleon_use_admonition_for_examples = False
+napoleon_use_admonition_for_notes = False
+napoleon_use_admonition_for_references = False
+napoleon_use_ivar = False
+napoleon_use_param = True
+napoleon_use_rtype = True
+napoleon_preprocess_types = False
+napoleon_type_aliases = None
+napoleon_attr_annotations = True
 
 templates_path = ["_templates"]
 exclude_patterns = []
@@ -69,6 +86,21 @@ myst_enable_extensions = [
     "tasklist",
 ]
 
+# Configurar MyST para que reconozca las directivas de Sphinx (ya incluidas por defecto)
+myst_enable_directives = [
+    "versionadded",
+    "versionchanged", 
+    "deprecated",
+    "note",
+    "warning",
+]
+
+# Configurar MyST para procesar docstrings 
+myst_dmath_double_inline = True
+
+# Habilitar procesamiento de MyST en docstrings
+autodoc_docstring_signature = True
+
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
@@ -83,7 +115,20 @@ html_sidebars = {
        "relations.html",
    ]
 }
+html_title = f"Lima-API {release} Doc"
+html_context = {
+    "github_user": "paradigmadigital",
+    "github_repo": "lima-api",
+    "github_version": "main",
+    "doc_path": "docs/source",
+}
+
 html_theme_options = {
+    "navbar_start": ["navbar-logo"],
+    "navbar_center": ["search-field"],
+    "navbar_end": ["navbar-icon-links"],
+    "navbar_persistent": [],
+    "navbar_align": "content",
     "icon_links": [
         {
             "name": "GitHub",

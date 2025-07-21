@@ -22,9 +22,12 @@ class AsyncClient(lima_api.LimaApi):
 ```
 
 You could extend from `lima_api.core.LimaRetryProcessor` to create you own retry processors.  
-```{autodoc2-object} lima_api.core.LimaRetryProcessor
-render_plugin = "myst"
-no_index = true
+
+```{eval-rst}
+.. autoclass:: lima_api.core.LimaRetryProcessor
+   :members:
+   :undoc-members:
+   :show-inheritance:
 ```
 
 ## How it works
@@ -44,13 +47,19 @@ In sync clients you must make the `process` flow on `do_retry` because `process`
 ### RetryAfterProcessor
 Located at `lima_api.retry_processors.RetryAfterProcessor`.
 
-```{autodoc2-docstring} lima_api.retry_processors.RetryAfterProcessor
-render_plugin = "myst"
+```{eval-rst}
+.. autoclass:: lima_api.retry_processors.RetryAfterProcessor
+   :members:
+   :undoc-members:
+   :show-inheritance:
 ```
 
 ### AutoLoginProcessor
 Located at `lima_api.retry_processors.AutoLoginProcessor`.
 
-```{autodoc2-docstring} lima_api.retry_processors.AutoLoginProcessor
-render_plugin = "myst"
+```{eval-rst}
+.. autoclass:: lima_api.retry_processors.AutoLoginProcessor
+   :members:
+   :undoc-members:
+   :show-inheritance:
 ```

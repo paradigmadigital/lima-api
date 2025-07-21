@@ -41,7 +41,7 @@ class PetApi(lima_api.LimaApi):
    
 :::{caution}
 * Synchronous clients only support synchronous functions, and in the same way with asynchronous.
-* You could see other code examples at [docs/examples](../examples) folder.
+* You could see other code examples at [docs/examples](../examples/) folder.
 :::
 
 ### Create functions.

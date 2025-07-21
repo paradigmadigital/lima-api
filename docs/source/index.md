@@ -2,12 +2,12 @@
 ```
 
 ```{toctree}
+---
+maxdepth: 2
+---
 quickstart
-advance/recomendations
-advance/settings
-advance/parameters
-advance/retry_processor
-advance/usecases/json_patch
-advance/usecases/opentracing
-advance/usecases/upload_files
+exceptions
+advance/index
+advance/usecases/index
+migrate
 ```
