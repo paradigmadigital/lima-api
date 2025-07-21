@@ -70,9 +70,8 @@ class LogEvent(str, Enum):
 
 class LimaRetryProcessor:
     """
-    ```{versionadded} 1.4.0
-    Support for retry when exceptions are raised
-    ```
+    .. versionadded:: 1.4.0
+       Support for retry when exceptions are raised
 
     All retry processors must be instanced of `lima_api.core.LimaRetryProcessor`.
 
