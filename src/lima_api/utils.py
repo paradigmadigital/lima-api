@@ -87,7 +87,11 @@ def parse_data(parse_class: type[T], data: bytes) -> Any:
         raise ex
 
 
-def get_request_params(query_params_mapping: list[LimaParams], kwargs: dict, undefined_values: tuple[Any, ...]) -> dict[str, Any]:
+def get_request_params(
+    query_params_mapping: list[LimaParams],
+    kwargs: dict,
+    undefined_values: tuple[Any, ...]
+) -> dict[str, Any]:
     """
     Create a dict of request parameters from query_params_mapping and kwargs.
 
@@ -140,7 +144,8 @@ def get_mappings(path: str, parameters: MappingProxyType[str, inspect.Parameter]
     :param path: Path of the url, used to determine path parameters.
     :param parameters: Mapping of function parameters.
     :param method: HTTP method of the function.
-    :return: Tuple of five lists of LimaParams: query parameters, path parameters, body parameter, header parameters and file parameters.
+    :return: Tuple of five lists of LimaParams: query parameters, path parameters,
+        body parameter, header parameters and file parameters.
     :raises ValueError: If a parameter is invalid (positional or unknown type).
     :raises TypeError: If a required parameter typing is missing.
     """

@@ -263,7 +263,8 @@ class LimaApiBase:
         :param method: the method of the request
         :param path: the path of the request. It may contain path parameters.
         :param path_params_mapping: the mapping for the path parameters
-        :param kwargs: the keyword arguments passed into the lima function that will be used to generate the proper request
+        :param kwargs: the keyword arguments passed into the lima function
+            that will be used to generate the proper request
         :param body_mapping: the mapping used for generate the body of the request
         :param file_mapping: the mapping used for generate the files of the request
         :param query_params_mapping: the mapping used for generate the query parameters of the request

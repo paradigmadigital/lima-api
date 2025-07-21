@@ -37,7 +37,7 @@ class DumpMode(str, Enum):
 class KwargsMode(str, Enum):
     """
     .. versionadded:: 1.4.3
-    
+
     Enum that indicate how manage the kwargs that are not defined.
     """
     IGNORE = "ignore"

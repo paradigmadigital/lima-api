@@ -12,7 +12,7 @@ class LimaSettings(BaseSettings):
     lima_bracket_regex: str = r"\{(.+?)\}"
     """
     .. versionadded:: 0.1.0
-    
+
     Regex expression that will get the names in the path params and
     macht the param names defined in the function.
     """
@@ -26,16 +26,16 @@ class LimaSettings(BaseSettings):
     lima_default_http_timeout: float = 15
     """
     .. versionadded:: 0.1.0
-    
+
     .. versionchanged:: 1.4.2
        Typing changed from int to float
-    
+
     Number of seconds used in timeout parameter of `httpx.Client or httpx.AsyncClient <https://www.python-httpx.org/advanced/timeouts/>`_
     """
     lima_default_response_code: int = 200
     """
     .. versionadded:: 0.1.0
-    
+
     Default expected response http code
     """
     lima_retry_after_max_retries: int = 5
