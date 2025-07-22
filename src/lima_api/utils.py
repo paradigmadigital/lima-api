@@ -58,6 +58,17 @@ class LimaParams(TypedDict):
 
 
 def parse_data(parse_class: type[T], data: bytes) -> Any:
+    """
+    Parse the given data into the given parse_class.
+
+    If the type of the given data is the same as the parse_class, then the function
+    just returns the data.
+
+    :param parse_class: The class to parse the data into.
+    :param data: The data to parse.
+    :return: None or data parsed.
+    :raises Exception: If an exception occurs during the parsing, and the parse_class is not Any.
+    """
     if parse_class is None:
         return
     if not data and get_origin(parse_class) in {UnionType, Union} and type(None) in get_args(parse_class):
@@ -76,7 +87,22 @@ def parse_data(parse_class: type[T], data: bytes) -> Any:
         raise ex
 
 
-def get_request_params(query_params_mapping: list[LimaParams], kwargs: dict, undefined_values: tuple[Any, ...]) -> dict:
+def get_request_params(
+    query_params_mapping: list[LimaParams],
+    kwargs: dict,
+    undefined_values: tuple[Any, ...],
+) -> dict[str, Any]:
+    """
+    Create a dict of request parameters from query_params_mapping and kwargs.
+
+    :param query_params_mapping: List of LimaParams objects that define the mapping between the function
+        parameters and the query params.
+    :param kwargs: Dict of function arguments.
+    :param undefined_values: Tuple of values that should be considered as undefined.
+    :return: Dict of query parameters.
+    :raises TypeError: If a required argument is missing.
+    """
+
     params = {}
     for param_map in query_params_mapping:
         if param_map["kwargs_name"] not in kwargs and "default" not in param_map:
@@ -112,6 +138,17 @@ def get_request_params(query_params_mapping: list[LimaParams], kwargs: dict, und
 
 
 def get_mappings(path: str, parameters: MappingProxyType[str, inspect.Parameter], method: str) -> tuple:
+    """
+    Parse function parameters to LimaParams.
+
+    :param path: Path of the url, used to determine path parameters.
+    :param parameters: Mapping of function parameters.
+    :param method: HTTP method of the function.
+    :return: Tuple of five lists of LimaParams: query parameters, path parameters,
+        body parameter, header parameters and file parameters.
+    :raises ValueError: If a parameter is invalid (positional or unknown type).
+    :raises TypeError: If a required parameter typing is missing.
+    """
     path_params = BRACKET_REGEX.findall(path)
 
     query_params_mapping: list[LimaParams] = []
@@ -195,6 +232,17 @@ def get_mappings(path: str, parameters: MappingProxyType[str, inspect.Parameter]
 
 
 def get_body(body_mapping: Optional[LimaParams], kwargs: dict) -> Optional[Union[dict, list]]:
+    """
+    Get the body of a request.
+
+    Given a body_mapping and a dictionary of keyword arguments, this function
+    returns the body of the request as a dictionary or a list. If the body is not
+    defined, the function returns None.
+
+    :param body_mapping: the mapping of the body parameter
+    :param kwargs: the keyword arguments
+    :return: the body of the request as a dictionary or a list
+    """
     if body_mapping:
         if issubclass(body_mapping["cls"], BaseModel):
             args = kwargs[body_mapping["kwargs_name"]]
@@ -225,6 +273,14 @@ def get_body(body_mapping: Optional[LimaParams], kwargs: dict) -> Optional[Union
 
 
 def get_final_url(url: str, path_params_mapping: list[LimaParams], kwargs: dict) -> str:
+    """
+    Replace path parameters in a URL with their values.
+
+    :param url: the URL with path parameters
+    :param path_params_mapping: the mapping of the path parameters
+    :param kwargs: the keyword arguments
+    :return: the URL with the path parameters replaced
+    """
     for param_map in path_params_mapping:
         url = url.replace(f"{{{param_map['api_name']}}}", f"{kwargs[param_map['kwargs_name']]}")
     return url

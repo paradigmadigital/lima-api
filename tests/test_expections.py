@@ -125,10 +125,10 @@ class TestExceptionClass:
 
     def test_response_wrong_model(self):
         ex = CustomException(
-            content=b'"Wrong json error"',
+            content=b'{"INVALID": "Wrong model error"}',
             status_code=404,
         )
-        assert ex.response() == "Wrong json error"
+        assert ex.response() == {"INVALID": "Wrong model error"}
 
     def test_response(self):
         obj = self.ex.response()
