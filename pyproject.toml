@@ -58,8 +58,14 @@ pydantic2 = [
 pydantic1 = [
     "pydantic[email]>=1.10,<2.0",
 ]
+docs = [
+    "sphinx>=7.0.0",
+    "myst-parser>=2.0.0",
+    "sphinx_design>=0.5.0",
+    "pydata-sphinx-theme>=0.14.0",
+]
 all = [
-    "lima-api[test,pydantic2]",
+    "lima-api[test,pydantic2,docs]",
 ]
 
 [tool.ruff]
