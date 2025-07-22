@@ -5,6 +5,7 @@ class Location(str, Enum):
     """
     Enum that indicate the location of data.
     """
+
     PATH = "PATH"
     QUERY = "QUERY"
     BODY = "BODY"
@@ -16,6 +17,7 @@ class DumpMode(str, Enum):
     """
     Enum that indicate how dump the data.
     """
+
     DICT = "dict"
     """
     Dump payload as a dict without the none values.
@@ -40,6 +42,7 @@ class KwargsMode(str, Enum):
 
     Enum that indicate how manage the kwargs that are not defined.
     """
+
     IGNORE = "ignore"
     """
     Do not send kwargs.

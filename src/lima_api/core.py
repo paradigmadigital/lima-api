@@ -78,6 +78,7 @@ class LimaRetryProcessor:
     That processors allow is adding automatic actions for your failed request,
     in order to you could fix the issue and retry.
     """
+
     max_retry: int = 1
     """
     Max number of retries before raise the exception.

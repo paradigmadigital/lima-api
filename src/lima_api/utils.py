@@ -90,7 +90,7 @@ def parse_data(parse_class: type[T], data: bytes) -> Any:
 def get_request_params(
     query_params_mapping: list[LimaParams],
     kwargs: dict,
-    undefined_values: tuple[Any, ...]
+    undefined_values: tuple[Any, ...],
 ) -> dict[str, Any]:
     """
     Create a dict of request parameters from query_params_mapping and kwargs.
