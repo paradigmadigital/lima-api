@@ -65,6 +65,7 @@ all = [
 [tool.ruff]
 line-length = 120
 include = ["pyproject.toml", "src/**/*.py", "tests/**/*.py"]
+exclude = ["*/code_generator/*"]
 
 [tool.ruff.lint]
 select = [
