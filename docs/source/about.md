@@ -1,8 +1,5 @@
----
-layout: page
-title: About
-permalink: /about/
----
+# About
+
 Lima-API is sync and async library that allows implements Rest APIs libs with python typing.
 
 You could read more about it on [our post (Spanish)](https://www.paradigmadigital.com/dev/poder-del-tipado-python-funciones-sin-codigo/).
