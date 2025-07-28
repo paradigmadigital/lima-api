@@ -1,6 +1,8 @@
 import asyncio
+import inspect
 from typing import Optional
 
+import client
 import httpx
 import pytest
 from client import (
@@ -271,6 +273,13 @@ class TestLimaApi:
 
         assert client_mock.return_value.send.called
         assert response == b"Just a test"
+
+    def test_unwrap(self):
+        func = inspect.unwrap(self.client_cls.sync_list_query)
+        assert func.__name__ == "sync_list_query"
+        sig = inspect.signature(func)
+        assert {"self", "limit"} == set(sig.parameters.keys())
+        assert sig.return_annotation == list[client.Item]
 
 
 class TestDeclarativeConfLimaApi(TestLimaApi):

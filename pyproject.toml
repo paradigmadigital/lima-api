@@ -91,6 +91,7 @@ ignore = []
 
 [tool.ruff.lint.extend-per-file-ignores]
 "tests/**/*.py" = ["B008", "DTZ001", "S101", "S106", "UP035", "UP006"]
+"src/lima_api/core.py" = ["B010"]
 
 [tool.pytest.ini_options]
 pythonpath = [

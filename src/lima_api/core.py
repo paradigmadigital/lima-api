@@ -933,6 +933,7 @@ def method_factory(method):
         :param timeout: Timeout for the request in seconds.
         :param default_response_code: Default status code expected in the response.
         :param response_mapping: Mapping to determine which exception to raise for each status code.
+        :param undefined_values: list of values that indicate undefined behavior
         :param default_response_code: Default status code expected in the response.
         :param headers: Additional headers for the request.
         :param default_exception: Default exception to raise if the status code is not in the mapping.
@@ -1009,6 +1010,7 @@ def method_factory(method):
                         kwargs_mode=kwargs_mode,
                     )
 
+            setattr(_func, "__wrapped__", func)
             return _func
 
         return _http_method
